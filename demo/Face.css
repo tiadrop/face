@@ -1,0 +1,194 @@
+*{
+	box-sizing: border-box;
+}
+body{background:#111;color:#fffc;font-family:sans-serif;margin:0}
+nav{background:#312;color:#fff9}
+nav a{
+	display:inline-block;
+	padding:.5em .75em;
+	text-decoration:none;
+	color:inherit;
+}
+nav a img{
+	width:1em;height:1em;
+	opacity: .6;
+}
+nav a.active{background:#111;color:#fff}
+nav a:hover{
+	box-shadow:inset 0 200em 0 #ffffff00;
+	color:#fff;
+	opacity: 1;
+}
+
+nav a.titleLink {
+	background: #a00;
+	color:#000;
+	opacity: .6;
+}
+
+nav a.titleLink:hover{
+	opacity: 1;
+}
+nav a.titleLink.active{
+	opacity: 1;
+	color: #f00;
+	background: #111;
+}
+
+.r00t{margin: 1em}
+
+h1 {
+	font-size: 2em;
+	font-weight: 100;
+}
+
+
+.panel {
+	background: #0004;
+	padding-left: 4em;
+	margin: .5em;
+}
+.panel > h1 {
+	transform: translateX(-4em);
+	top: 0;
+	font-size: 1em;
+	font-weight: inherit;
+	margin: 0 .5em;
+	color:#f44;
+	display: inline-block;
+	padding: 1.5em;
+	vertical-align: top;
+	text-transform: uppercase;
+}
+
+
+img.tonk {
+	width: 50%;
+}
+
+.panel > section {
+	display: inline-block;
+	padding: 1.5em 1em;
+	vertical-align: middle;
+}
+.panel > section label , .eventLog > li > label {
+	color:#fff8;
+	padding: .25em .5em;
+	margin-right: .5em;
+	margin-left: 2em;
+}
+
+body.errorPage {
+	background: #181111;
+}
+
+
+.eventLog{
+	display: inline-block;
+	padding: 1em;
+	width: 1024px;
+	height: 400px;
+	list-style: none;
+	margin: 0;
+}
+
+.eventLog > li > label {
+	min-width: 10em;
+	text-align: right;
+	display: inline-block;
+	background: var(--col);
+	padding: .25em .5em;
+	margin: 0;
+}
+
+.eventLog > li {
+	color: #999;
+}
+
+.xeventLog > li.good {
+	color: #fff;
+}
+.xeventLog > li.good > label {
+	background: #5d53;
+}
+
+.panel em {
+	background: #f6f2;
+	font-style: inherit;
+}
+
+.panel a {
+	color: inherit;
+	text-decoration: underline;
+}
+.panel a:hover {
+	color: #fff;
+}
+
+.eventLog > li {
+	--col: #55d3;
+	margin-bottom: 1px;
+}
+.eventLog > li > article {
+	border-left: var(--col) 3px solid;
+	display: inline-block;
+	padding: .25em .5em;
+
+}
+
+
+.eventLog > li.priority {
+	--col: #f66;
+}
+.eventLog > li.good {
+	--col: #5d53
+}
+
+.eventLog > li.priority > label {
+	color: #000;
+}
+
+.eventLog > li label {
+	vertical-align: top;
+	background: var(--col);
+}
+
+.eventLog > li > article > button {
+	border: 1px #444 solid;
+	background:#222;
+	color: #aaa;
+	border-radius: .125em;
+	font: inherit;
+	padding: .5em 1em;
+	box-shadow: inset 0 .67em .24em #fff1;
+}
+.eventLog > li > article > button:hover {
+	background: #444;
+	border-color: #888;
+	color:#fff;
+	text-shadow: 0 0 .4em #fff8;
+	box-shadow: inset 0 .67em .24em #fff2, 0 0 8em #fff2;
+}
+
+.eventLog > li.projectY > article {
+	opacity: .6;
+}
+
+
+
+.eventLog > li > article > button.Face_DelegateButton_expired:disabled {
+	border-color: #f00;
+}
+
+.eventLog > li > article > button:disabled, .eventLog > li > article > button:disabled:hover {
+	background:#222;
+	box-shadow: inset 0 .67em .24em #fff1;
+	opacity: .67;
+	text-shadow: none;
+	border-color: #444;
+	color: #aaa;
+}
+
+.crabs {
+	width: 600px;
+}

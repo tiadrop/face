@@ -1,0 +1,1 @@
+ webpack Face/js-src/main.js -o ./demo/Face.js -w --mode production
