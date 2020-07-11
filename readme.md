@@ -28,3 +28,5 @@ Console.WriteLine(input.RenderHTML());
 ```
 
 Included is a similar system written in JavaScript. It was written for private use but I feel its similarity and ancestry to this project make it an ideal inclusion to give a degree of cognitive consistency between server and client code. For code and examples see *Face/js-src/jel/\**.
+
+JSON can be imported and exported using `Face.JSON.JSValue`. Rather than attempting to construct native objects from JSON data, JSValue allows dynamic structure with basic runtime type-checking. One has the option of reading each value's type just as one might use `typeof` in JSON's most natural habitat. See *Main()* in *demo/Program.cs* for examples of importing and exporting JSON using this system.

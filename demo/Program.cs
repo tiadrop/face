@@ -1,3 +1,5 @@
+using System.Linq;
+using System.Collections.ObjectModel;
 using System.IO;
 using System;
 using System.Threading.Tasks;
@@ -9,6 +11,8 @@ using Microsoft.AspNetCore.Routing;
 using Lantern.Face;
 using Lantern.Face.Parts;
 using Lantern.Face.Parts.HTML;
+using System.Collections.Generic;
+using Lantern.Face.JSON;
 
 namespace Lantern.FaceDemo {
 
@@ -112,8 +116,42 @@ namespace Lantern.FaceDemo {
 	}
 
 
+
+	public class User { // demoing a JSON engine use case
+		public readonly string Name;
+		public User(string name) => Name = name;
+		public static implicit operator JSValue(User source) => new JSValue(new Dictionary<string, JSValue> {
+			["name"] = source.Name,
+			["email_verified"] = false,
+		});
+	}
+
 	public class Program {
 		public static void Main(string[] args) {
+			string json = File.ReadAllText("jsontest");
+			JSValue jsobj = JSValue.ParseJSON(json);
+			Console.WriteLine("[json test] Second user name: " + jsobj["hello"][6]["users"][1]["name"].StringValue);
+			Console.WriteLine("[json test] Strings: " + new JSValue(jsobj["hello"].ToArray().Where(j => j.DataType == JSType.String).ToArray()).ToJSON());
+
+			User ExampleUser = new User("Eric123");
+
+			jsobj = new JSValue(new Dictionary<string, JSValue> {
+				["name"] = "Eric",
+				["account_info"] = ExampleUser,
+				["stats"] = new Dictionary<string, JSValue>{
+					["strength"] = 51,
+					["speed"] = 30,
+				},
+				["abilities"] = new JSValue[]{
+					"heal", "cross-slash"
+				}
+			});
+			Console.WriteLine("[json test] ToJSON(): " + jsobj.ToJSON());
+
+			ReadOnlyDictionary<string, JSValue> stats = jsobj["stats"];
+			double speed = stats["speed"];
+			Console.WriteLine("[json test] " + jsobj["name"] + "'s speed: " + speed.ToString());
+
 			Server.Start();
 		}
 	}
