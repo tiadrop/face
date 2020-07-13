@@ -8,7 +8,7 @@ Parts can be components; essentially factories for producing Element structures 
 
 There are two ways to involve JavaScript. The simplest is to `jsUrls.Add(url)` inside your Page derivative's `Prepare()` override. This will load the script at the *end* of the rendered Body via `face.require()`.
 
-Face adds another scripting mechanism which I've found to be convenient and enjoyable. An <i>element script</i> can be registered with `face.register()`, then it'll be called against all elements whose `data-script` attribute matches the registered name. Registration will usually happen in a .js file loaded via `jsUrls`, itself usually having been automatically included due to the optional Part override `GetClientRequires()`. Client requirements are considered when writing a Part but not when consuming it. See *TimeAgo.cs* and *Face.Parts.General.js* for an example of this.
+Face adds another scripting mechanism which I've found to be convenient and enjoyable. An *element script* can be registered with `face.register()`, then it'll be called against all elements whose `data-script` attribute matches the registered name. Registration will usually happen in a .js file loaded via `jsUrls`, itself usually having been automatically included due to the optional Part override `GetClientRequires()`. Client requirements are considered when writing a Part but not when consuming it. See *TimeAgo.cs* and *Face.Parts.General.js* for an example of this.
 
 The element script system was designed to allow for asynchronous initialisation. Pass a `Promise` to `face.await()` in your custom JS file and we'll wait until your script's loaded and ready.
 
@@ -19,7 +19,7 @@ Reading an Element's ID will generate one if empty, so we can think of all Eleme
 ```c#  
 InputElement input = new InputElement(){ Value = "wazzaaaa" };  
 Console.WriteLine(input.RenderHTML());  
-LabelElement label = new LabelElement(){ For = input }; // setter: Attribs["for"] = value.ID  
+LabelElement label = new LabelElement(){ For = input }; // set => Attribs["for"] = value.ID  
 Console.WriteLine(label.Attribs["for"]);  
 Console.WriteLine(input.RenderHTML());  
 // <input value="wazzaaaa">  
