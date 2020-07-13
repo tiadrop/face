@@ -33,4 +33,4 @@ Face.JSON provides an `IJSONEncodable` interface and an extension method `ToJSON
 
 Rather than attempting to construct native objects from JSON data, `IJSONEncodable.ToJSValue()` and `JSValue.ParseJSON()` allow for manually-processed dynamic structure with runtime type-checking. Each produces a JSValue object with interfaces to read its internal value as any compatible type including `ReadOnlyDictionary<string, JSValue>` and `JSValue[]`. JS object properties can be read via `jsValue[string]` and JS array entries can be read via `jsValue[int]`. A JSValue reveals its type via `jsValue.DataType`, just as one might use `typeof` in JSON's most natural habitat.
 
-I believe JSON's dynamic nature is a strength and have aimed to take advantage of it while providing type information and safety where appropriate. See `Main()` in *demo/JSON.cs* for examples of importing and exporting JSON using this system.
+I believe JSON's dynamic nature is a strength and have aimed to take advantage of it while providing type information and safety where appropriate. See *demo/JSON.cs* for examples of importing and exporting JSON using this system.
