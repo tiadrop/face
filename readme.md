@@ -14,19 +14,23 @@ The element script system was designed to allow for asynchronous initialisation.
 
 After dynamically adding content `face.apply()` should be called, optionally passing in the element containing the new content, to apply element scripts. `face.require()` may also be called freely to load dependencies of such content, or they could be pre-emptively added to the Page's `jsUrls`.
 
-Reading an Element's ID will generate one if empty, meaning we can think of all Elements as simply 'having' an ID.
+Reading an Element's ID will generate one if empty, so we can think of all Elements as simply 'having' a unique ID.
 
-```c#
-InputElement input = new InputElement(){ Value = "wazzaaaa" };
-Console.WriteLine(input.RenderHTML());
-LabelElement label = new LabelElement(){ For = input }; // setter: Attribs["for"] = value.ID
-Console.WriteLine(label.Attribs["for"]);
-Console.WriteLine(input.RenderHTML());
-// <input value="wazzaaaa">
-// 92a73ac38
+```c#  
+InputElement input = new InputElement(){ Value = "wazzaaaa" };  
+Console.WriteLine(input.RenderHTML());  
+LabelElement label = new LabelElement(){ For = input }; // setter: Attribs["for"] = value.ID  
+Console.WriteLine(label.Attribs["for"]);  
+Console.WriteLine(input.RenderHTML());  
+// <input value="wazzaaaa">  
+// 92a73ac38  
 // <input value="wazzaaaa" id="92a73ac38">
 ```
 
 Included is a similar system written in JavaScript. It was written for private use but I feel its similarity and ancestry to this project make it an ideal inclusion to give a degree of cognitive consistency between server and client code. For code and examples see *Face/js-src/jel/\**.
 
-JSON can be imported and exported using `Face.JSON.JSValue`. Rather than attempting to construct native objects from JSON data, JSValue allows dynamic structure with basic runtime type-checking. One has the option of reading each value's type just as one might use `typeof` in JSON's most natural habitat. See *Main()* in *demo/Program.cs* for examples of importing and exporting JSON using this system.
+Face.JSON provides an `IJSONEncodable` interface and an extension method `ToJSON()` to produce JSON-formatted data from each of IJSONEncodable, string, int, double, bool, T[] and IDictionary<string, T> where T : IJSONEncodable or a listed primitive.
+
+Rather than attempting to construct native objects from JSON data, `IJSONEncodable.ToJSValue()` and `JSValue.ParseJSON()` allow for manually-processed dynamic structure with runtime type-checking. Each produces a JSValue object with interfaces to read its internal value as any compatible type including `ReadOnlyDictionary<string, JSValue>` and `JSValue[]`. JS object properties can be read via `jsValue[string]` and JS array entries can be read via `jsValue[int]`. A JSValue reveals its type via `jsValue.DataType`, just as one might use `typeof` in JSON's most natural habitat.
+
+I believe JSON's dynamic nature is a strength and have aimed to take advantage of it while providing type information and safety where appropriate. See `Main()` in *demo/JSON.cs* for examples of importing and exporting JSON using this system.

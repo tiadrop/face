@@ -4,7 +4,78 @@ using System.Linq;
 using System.Text;
 using System.Collections.Generic;
 using System.Text.RegularExpressions;
+
 namespace Lantern.Face.JSON {
+
+	public static class Extensions {
+		// primitives
+		public static string ToJSON(this string s) => $"\"{s.Replace("\\", "\\\\").Replace("\"", "\\\"")}\"";
+		public static string ToJSON(this int v) => v.ToString();
+		public static string ToJSON(this double v) => v.ToString();
+		public static string ToJSON(this bool v) => v ? "true" : "false";
+
+		public static string ToJSON(this IJSONEncodable obj) => obj.ToJSValue().ToJSON();
+
+		// base collections
+		public static string ToJSON(this JSValue[] list, int maxDepth = JSValue.DefaultMaxDepth)
+			=> "[" + String.Join(",", list.Select(val => val == null ? "null" : val.ToJSON(maxDepth - 1))) + "]";
+		public static string ToJSON(this IDictionary<string, JSValue> dict, int maxDepth = JSValue.DefaultMaxDepth){
+			var sb = new StringBuilder();
+			sb.Append("{");
+			string[] colonicPairings = dict.Keys.Select<string, string>(key => {
+				var value = dict[key];
+				var sb = new StringBuilder();
+				sb.Append(key.ToJSON());
+				sb.Append(":");
+				sb.Append(value.ToJSON(maxDepth - 1));
+				return sb.ToString();
+			}).ToArray();
+
+			sb.Append(string.Join(",", colonicPairings));
+
+			sb.Append("}");
+			return sb.ToString();
+		}
+
+		// compatible Dictionaries
+		public static string ToJSON(this IDictionary<string, IJSONEncodable> dict)
+			=> new Dictionary<string, JSValue>(dict.Select(kv => 
+				new KeyValuePair<string, JSValue>(kv.Key, kv.Value.ToJSValue())
+			)).ToJSON();
+		public static string ToJSON(this IDictionary<string, string> dict)
+			=> new Dictionary<string, JSValue>(dict.Select(kv =>
+				new KeyValuePair<string, JSValue>(kv.Key, kv.Value)
+			)).ToJSON();
+		public static string ToJSON(this IDictionary<string, double> dict)
+			=> new Dictionary<string, JSValue>(dict.Select(kv =>
+				new KeyValuePair<string, JSValue>(kv.Key, kv.Value)
+			)).ToJSON();
+		public static string ToJSON(this IDictionary<string, int> dict)
+			=> new Dictionary<string, JSValue>(dict.Select(kv =>
+				new KeyValuePair<string, JSValue>(kv.Key, kv.Value)
+			)).ToJSON();
+		public static string ToJSON(this IDictionary<string, bool> dict)
+			=> new Dictionary<string, JSValue>(dict.Select(kv =>
+				new KeyValuePair<string, JSValue>(kv.Key, kv.Value)
+			)).ToJSON();
+
+		// compatible arrays
+		public static string ToJSON(this IJSONEncodable[] list) => list.Select(v => v.ToJSValue()).ToArray().ToJSON();
+		public static string ToJSON(this string[] list) => list.Select(v => new JSValue(v)).ToArray().ToJSON();
+		public static string ToJSON(this int[] list) => list.Select(v => new JSValue(v)).ToArray().ToJSON();
+		public static string ToJSON(this bool[] list) => list.Select(v => new JSValue(v)).ToArray().ToJSON();
+		public static string ToJSON(this double[] list) => list.Select(v => new JSValue(v)).ToArray().ToJSON();
+
+	}
+
+	public interface IJSONEncodable {
+		/// <summary>
+		/// Express the object as a JSValue to enable implicit and explicit JSON encoding
+		/// </summary>
+		/// <returns>A JSValue representing this object</returns>
+		JSValue ToJSValue();
+	}
+
 	public enum JSType {
 		Boolean,
 		Number,
@@ -15,93 +86,147 @@ namespace Lantern.Face.JSON {
 	}
 
 	public class JSValue {
+		public const int DefaultMaxDepth = 32;
 		public readonly JSType DataType;
-		public bool BooleanValue;
-		public readonly double NumberValue;
-		public readonly string StringValue;
-		public readonly ReadOnlyDictionary<string, JSValue> ObjectProperties;
-		public readonly JSValue[] ArrayValue;
+		private bool _booleanValue;
+		private readonly double _numberValue;
+		private readonly string _stringValue;
+		public readonly ReadOnlyDictionary<string, JSValue> _ObjectValue;
+		public readonly JSValue[] _arrayValue;
+
+		public string StringValue {
+			get {
+				switch (DataType) {
+					case JSType.String: return _stringValue;
+					case JSType.Number: return _numberValue.ToString();
+					case JSType.Boolean: return _booleanValue ? "True" : "False";
+				}
+				throw new InvalidCastException("Can't read " + DataType.ToString() + " as string");
+			}
+		}
+		public double NumberValue {
+			get {
+				switch (DataType) {
+					case JSType.String: return Convert.ToDouble(_stringValue);
+					case JSType.Number: return _numberValue;
+					case JSType.Boolean: return _booleanValue ? 1 : 0;
+				}
+				throw new InvalidCastException("Can't read " + DataType.ToString() + " as number");
+			}
+		}
+		public bool BooleanValue {
+			get {
+				switch (DataType) {
+					case JSType.String: return Convert.ToBoolean(_stringValue);
+					case JSType.Number: return _numberValue != 0;
+					case JSType.Boolean: return _booleanValue;
+					case JSType.Null: return false;
+				}
+				throw new InvalidCastException("Can't read " + DataType.ToString() + " as boolean");
+			}
+		}
+		public JSValue[] ArrayValue {
+			get {
+				if(DataType != JSType.Array) throw new InvalidCastException("Can't read " + DataType.ToString() + " as array");
+				return _arrayValue;
+			}
+		}
+		public ReadOnlyDictionary<string, JSValue> ObjectValue {
+			get {
+				if(DataType != JSType.Object) throw new InvalidCastException("Can't read " + DataType.ToString() + " as object");
+				return _ObjectValue;
+			}
+		}
+
+		public ReadOnlyDictionary<string, JSValue>.KeyCollection Keys => _ObjectValue.Keys;
 
 		public JSValue(string s) {
 			DataType = JSType.String;
-			StringValue = s;
+			_stringValue = s;
 		}
 		public JSValue(double n) {
 			DataType = JSType.Number;
-			NumberValue = n;
+			_numberValue = n;
 		}
 		public JSValue(int n) {
 			DataType = JSType.Number;
-			NumberValue = Convert.ToDouble(n);
+			_numberValue = Convert.ToDouble(n);
 		}
 		public JSValue(bool b) {
 			DataType = JSType.Boolean;
-			BooleanValue = b;
+			_booleanValue = b;
 		}
 
 		public JSValue(JSValue[] array) {
 			DataType = JSType.Array;
-			ArrayValue = array;
+			_arrayValue = array;
 		}
 
 		private JSValue(JsNull nul) {
 			DataType = JSType.Null;
 		}
 
-		public JSValue(Dictionary<string, JSValue> properties) {
+		public JSValue(IDictionary<string, JSValue> properties) {
 			DataType = JSType.Object;
-			ObjectProperties = new ReadOnlyDictionary<string, JSValue>(properties);
+			_ObjectValue = new ReadOnlyDictionary<string, JSValue>(properties);
 		}
 
 
 		private class JsNull { }
 		public static readonly JSValue Null = new JSValue(new JsNull());
 
+		public bool IsNull => DataType == JSType.Null;
 
-		// type >> JS
+		// native -> JS
 		public static implicit operator JSValue(string s) => new JSValue(s);
 		public static implicit operator JSValue(bool b) => new JSValue(b);
 		public static implicit operator JSValue(int n) => new JSValue(n);
 		public static implicit operator JSValue(double n) => new JSValue(n);
 		public static implicit operator JSValue(Dictionary<string, JSValue> properties) => new JSValue(properties);
+		public static implicit operator JSValue(IJSONEncodable[] arr) => arr == null ? null : new JSValue(arr.Select(item => {
+			return item.ToJSValue();
+		}).ToArray());
 		public static implicit operator JSValue(JSValue[] arr) {
 			if (arr == null) return JSValue.Null;
 			return new JSValue(arr);
 		}
+		public static implicit operator JSValue(string[] v) => v.Select(m => new JSValue(m)).ToArray();
+		public static implicit operator JSValue(bool[] v) => v.Select(m => new JSValue(m)).ToArray();
+		public static implicit operator JSValue(int[] v) => v.Select(m => new JSValue(m)).ToArray();
+		public static implicit operator JSValue(double[] v) => v.Select(m => new JSValue(m)).ToArray();
 
-		// JS >> type
-		public static implicit operator string(JSValue j) {
-			if (j.DataType != JSType.String) throw new InvalidCastException("Incorrect data type: trying to read a " + j.DataType.ToString() + " as string");
+		// JS -> native
+		public static implicit operator string(JSValue j){
+			if(j.DataType != JSType.String) throw new InvalidCastException("Implicitly casting JS " + j.DataType.ToString() + " to string is now allowed; consider jsValue.StringValue");
 			return j.StringValue;
 		}
 		public static implicit operator double(JSValue j) {
-			if (j.DataType != JSType.Number) throw new InvalidCastException("Incorrect data type: trying to read a " + j.DataType.ToString() + " as double");
+			if(j.DataType == JSType.String) return ParseJSON(j.StringValue).NumberValue;
+			if (j.DataType != JSType.Number) throw new InvalidCastException("Implicitly casting JS " + j.DataType.ToString() + " to double is now allowed; consider jsValue.NumberValue");
 			return j.NumberValue;
 		}
-		public static implicit operator bool(JSValue j) {
-			if (j.DataType != JSType.Boolean) throw new InvalidCastException("Incorrect data type: trying to read a " + j.DataType.ToString() + " as bool");
+		public static implicit operator int(JSValue j) { // not actually sure about this one
+			double value = j.NumberValue;
+			if(value != Math.Round(value)) throw new InvalidCastException("Lost data in implicit cast");
+			if (j.DataType != JSType.Number) throw new InvalidCastException("Implicitly casting JS " + j.DataType.ToString() + " to int is now allowed; consider jsValue.NumberValue");
+			return Convert.ToInt32(j.NumberValue);
+		}
+		public static implicit operator bool(JSValue j){
+			if (j.DataType != JSType.Boolean) throw new InvalidCastException("Implicitly casting JS " + j.DataType.ToString() + " to bool is now allowed; consider jsValue.BooleanValue");
 			return j.BooleanValue;
 		}
-		public static implicit operator JSValue[](JSValue j) {
-			if (j.DataType != JSType.Array) throw new InvalidCastException("Incorrect data type: trying to read a " + j.DataType.ToString() + " as array");
-			return j.ArrayValue;
-		}
-		public static implicit operator ReadOnlyDictionary<string, JSValue>(JSValue j) {
-			if (j.DataType != JSType.Object) throw new InvalidCastException("Incorrect data type: trying to read a " + j.DataType.ToString() + " as object");
-			return j.ObjectProperties;
-		}
 
 
-		public static JSValue ParseJSON(string s) => Parser.Parse(s);
+		public static implicit operator JSValue[](JSValue j) => j.ArrayValue; // ArrayValue and ObjectValue getters already check the type
+		public static implicit operator ReadOnlyDictionary<string, JSValue>(JSValue j) => j.ObjectValue;
 
-		private static string EscapeString(string s) {
-			return s.Replace("\\", "\\\\").Replace("\"", "\\\"");
-		}
+		public override string ToString() => StringValue;
 
+		// indexers
 		public JSValue this[string property] {
 			get {
 				if (DataType != JSType.Object) throw new ArgumentException("Trying to access property of a " + DataType.ToString() + " value");
-				return ObjectProperties[property];
+				return ObjectValue[property];
 			}
 		}
 		public JSValue this[int index] {
@@ -111,43 +236,41 @@ namespace Lantern.Face.JSON {
 			}
 		}
 
-		public JSValue[] ToArray() {
-			if (DataType != JSType.Array) throw new ArgumentException("Trying create array from a " + DataType.ToString() + " value");
-			return ArrayValue;
-		}
+		public bool ContainsKey(string key) => ObjectValue.ContainsKey(key);
+		public bool Contains(JSValue value) => ArrayValue.Contains(value);
 
-		public string ToJSON(int maxDepth = 128) {
+		/// <summary>
+		/// Converts the object to a JSON-formatted string
+		/// </summary>
+		/// <param name="maxDepth">Specifies a maximum nesting level for array- and object-typed values</param>
+		/// <returns>JSON-formatted string</returns>
+		public string ToJSON(int maxDepth = DefaultMaxDepth) {
 			if (maxDepth < 0) throw new ArgumentOutOfRangeException("Maximum depth exceeded");
 			switch (DataType) {
-				case JSType.Boolean: return BooleanValue ? "true" : "false";
-				case JSType.Number: return NumberValue.ToString();
-				case JSType.String: return $"\"{EscapeString(StringValue)}\"";
+				case JSType.Boolean: return _booleanValue.ToJSON();
+				case JSType.Number: return _numberValue.ToJSON();
+				case JSType.String: return _stringValue.ToJSON();
+				case JSType.Object: return ObjectValue.ToJSON();
+				case JSType.Array: return ArrayValue.ToJSON();
 				case JSType.Null: return "null";
-				case JSType.Object:
-					var sb = new StringBuilder();
-					sb.Append("{");
-
-					string[] colonicPairings = ObjectProperties.Keys.Select<string, string>(key => {
-						var value = ObjectProperties[key];
-						var sb = new StringBuilder();
-						sb.Append($"\"{EscapeString(key)}\": ");
-						sb.Append(value.ToJSON(maxDepth - 1));
-						return sb.ToString();
-					}).ToArray();
-
-					sb.Append(string.Join(", ", colonicPairings));
-
-					sb.Append("}");
-					return sb.ToString();
-				case JSType.Array: return "[" + String.Join(", ", ArrayValue.Select(val => val == null ? "null" : val.ToJSON(maxDepth - 1))) + "]";
 			}
 			return "";
 		}
+
+		/// <summary>
+		/// Creates a JSValue object from a JSON-formatted strong
+		/// </summary>
+		/// <param name="json">A JSON-formatted string</param>
+		/// <returns>An object representing the data structure expressed in the input JSON string</returns>
+		public static JSValue ParseJSON(string json) => Parser.Parse(json);
+
 	}
 
 	public class ParseError : Exception {
 		public ParseError(string reason) : base(reason) { }
+		public ParseError(string reason, Exception InnerException) : base(reason, InnerException) { }
 	}
+
 	internal class Parser {
 		delegate bool ReadingState(Parser parser);
 		private string input;
@@ -155,13 +278,9 @@ namespace Lantern.Face.JSON {
 		public static JSValue Parse(string s){
 			var parser = new Parser(s);
 			parser.NextToken();
-			var result = parser.ReadValue();
+			var result = parser.readValue();
 			parser.NextToken(true);
 			return result;
-		}
-
-		private string unescape(string s){
-			return s.Replace("\\", "/");
 		}
 
 		private static char[] whiteSpaceChars = new char[] { '\r', '\n', '\t', ' ' };
@@ -176,19 +295,10 @@ namespace Lantern.Face.JSON {
 			}
 			if(expectEOT && position < input.Length) throw new ParseError("Unexpected " + current + " at " + position.ToString());
 		}
-		private JSValue ReadValue(){
-			if(input[position] == '"') return readString();
-			if(input[position] == '[') return readArray();
-			if(input[position] == '{') return readObject();
-
-			var numberMatch = new Regex("^\\d*(\\.?\\d+)+").Match(input.Substring(position));
-			if(numberMatch.Success){
-				string cap = numberMatch.Captures[0].Value;
-				double num = Convert.ToDouble(cap);
-				position += numberMatch.Captures[0].Length - 1;
-				return num;
-			}
-
+		private JSValue readValue(){
+			if(current == '"') return readString();
+			if(current == '[') return readArray();
+			if(current == '{') return readObject();
 			if (input.Substring(position, 4) == "null") {
 				position += 3;
 				return JSValue.Null;
@@ -201,6 +311,15 @@ namespace Lantern.Face.JSON {
 				position += 4;
 				return false;
 			}
+
+			var numberMatch = new Regex("\\d*\\.?\\d+").Match(input, position);
+			if (numberMatch.Success) {
+				string cap = numberMatch.Captures[0].Value;
+				double num = Convert.ToDouble(cap);
+				position += numberMatch.Captures[0].Length - 1;
+				return num;
+			}
+
 			throw new ParseError("Unexpected " + current + " at " + position.ToString());
 		}
 
@@ -216,6 +335,14 @@ namespace Lantern.Face.JSON {
 					if(current == 'n'){ sb.Append("\n"); }
 					else if (current == 'r') { sb.Append("\r"); }
 					else if (current == 't') { sb.Append("\t"); }
+					else if (current == 'u') {
+						// todo codepoint encoding
+						var sequence = input.Substring(position + 1, 4);
+						if(sequence.Length != 4 || !new Regex("^[0-9a-f]{4}$").IsMatch(sequence)) throw new ParseError("Malformed \\u sequence at " + position);
+						sb.Append(char.ConvertFromUtf32(int.Parse(sequence, System.Globalization.NumberStyles.HexNumber)));
+						position += 5;
+						continue;
+					}
 					else sb.Append(current);
 					position++;
 					continue;
@@ -238,7 +365,7 @@ namespace Lantern.Face.JSON {
 				if (current == ']') {
 					return found.ToArray();
 				}
-				found.Add(ReadValue());
+				found.Add(readValue());
 
 				NextToken();
 				if (current == ']') {
@@ -254,13 +381,14 @@ namespace Lantern.Face.JSON {
 			while(true){
 				NextToken();
 				if(current == '}') return result;
-				var keyValue = ReadValue();
-				if(keyValue.DataType != JSType.String) throw new ParseError("Expected property index at " + position.ToString());
+				var keyPosition = position;
+				var keyValue = readValue();
+				if(keyValue.DataType != JSType.String) throw new ParseError("Expected property name at " + position.ToString());
 				NextToken();
 				if(current != ':') throw new ParseError("Expected : at " + position.ToString());
 				NextToken();
-				var value = ReadValue();
-				result[keyValue.StringValue] = value;
+				var value = readValue();
+				result[keyValue] = value;
 				NextToken();
 				if (current == '}') return result;
 				if (current != ',') throw new ParseError("Expected , or } at " + position);

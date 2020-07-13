@@ -35,13 +35,13 @@ namespace Lantern.Face {
 					context.Response.ContentType = "image/png";
 					await context.Response.Body.WriteAsync(faviconPngContent);
 				});
-				endpoints.MapGet("/." + Version.ShortName + ".css", async context => { // ".Face.css"
+				endpoints.MapGet("/.Face.css", async context => { // ".Face.css"
 					context.Response.ContentType = "text/css";
 					await context.Response.SendFileAsync(_app.GetResourcePath("Face.css"));
 				});
-				endpoints.MapGet("/." + Version.ShortName + ".js", async context => { // ".Face.js"
+				endpoints.MapGet("/.Face.js", async context => { // ".Face.js"
 					context.Response.ContentType = "text/javascript";
-					await context.Response.WriteAsync("// " + Version.Name + " (c) thecynicslantern.net 2020\n");
+					await context.Response.WriteAsync("// Face (c) thecynicslantern.net 2020\n");
 					await context.Response.SendFileAsync(_app.GetResourcePath("Face.js"));
 				});
 				endpoints.MapGet("/{lib}.js", async context => {
