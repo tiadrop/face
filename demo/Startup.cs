@@ -31,6 +31,7 @@ namespace Lantern.Face {
 				endpoints.MapGet("/favicon.png", async context => {
 					if(faviconPngContent == null){
 						await _app.Error404(context);
+						return;
 					}
 					context.Response.ContentType = "image/png";
 					await context.Response.Body.WriteAsync(faviconPngContent);

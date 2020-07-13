@@ -125,7 +125,7 @@ namespace Lantern.Face.Parts.HTML {
 				}
 			}
 			public bool Remove(string key) => attribs.Remove("data-" + key);
-			public string[] Keys => attribs.Keys.Where(k => k.Substring(0, 5) == "data-").Select(k => k.Substring(5)).ToArray();
+			public string[] Keys => attribs.Keys.Where(k => k.Length > 5 && k.Substring(0, 5) == "data-").Select(k => k.Substring(5)).ToArray();
 
 
 			public IEnumerator<KeyValuePair<string, string>> GetEnumerator() => attribs.GetEnumerator();

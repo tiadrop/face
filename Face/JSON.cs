@@ -197,22 +197,22 @@ namespace Lantern.Face.JSON {
 
 		// JS -> native
 		public static implicit operator string(JSValue j){
-			if(j.DataType != JSType.String) throw new InvalidCastException("Implicitly casting JS " + j.DataType.ToString() + " to string is now allowed; consider jsValue.StringValue");
+			if(j.DataType != JSType.String) throw new InvalidCastException("Implicitly casting JS " + j.DataType.ToString() + " to string is not allowed; consider jsValue.StringValue");
 			return j.StringValue;
 		}
 		public static implicit operator double(JSValue j) {
 			if(j.DataType == JSType.String) return ParseJSON(j.StringValue).NumberValue;
-			if (j.DataType != JSType.Number) throw new InvalidCastException("Implicitly casting JS " + j.DataType.ToString() + " to double is now allowed; consider jsValue.NumberValue");
+			if (j.DataType != JSType.Number) throw new InvalidCastException("Implicitly casting JS " + j.DataType.ToString() + " to double is not allowed; consider jsValue.NumberValue");
 			return j.NumberValue;
 		}
 		public static implicit operator int(JSValue j) { // not actually sure about this one
 			double value = j.NumberValue;
 			if(value != Math.Round(value)) throw new InvalidCastException("Lost data in implicit cast");
-			if (j.DataType != JSType.Number) throw new InvalidCastException("Implicitly casting JS " + j.DataType.ToString() + " to int is now allowed; consider jsValue.NumberValue");
+			if (j.DataType != JSType.Number) throw new InvalidCastException("Implicitly casting JS " + j.DataType.ToString() + " to int is not allowed; consider jsValue.NumberValue");
 			return Convert.ToInt32(j.NumberValue);
 		}
 		public static implicit operator bool(JSValue j){
-			if (j.DataType != JSType.Boolean) throw new InvalidCastException("Implicitly casting JS " + j.DataType.ToString() + " to bool is now allowed; consider jsValue.BooleanValue");
+			if (j.DataType != JSType.Boolean) throw new InvalidCastException("Implicitly casting JS " + j.DataType.ToString() + " to bool is not allowed; consider jsValue.BooleanValue");
 			return j.BooleanValue;
 		}
 

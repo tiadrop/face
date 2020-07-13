@@ -1,3 +1,6 @@
+using System.IO;
+using System.Buffers;
+using System.Collections.ObjectModel;
 using System.Security.Cryptography;
 using System.Linq;
 using Microsoft.AspNetCore.Http;
@@ -5,14 +8,20 @@ using System.Collections.Generic;
 using System;
 using System.Threading.Tasks;
 using Lantern.Face.Parts.HTML;
+using Lantern.Face.JSON;
+
 namespace Lantern.Face.Parts {
 	public class DelegateButton : ButtonElement {
+
+		public DelegateButton(){
+			Attribs["type"] = "button";
+		}
 
 		// experimental. probably not thread-safe and frankly i don't know how to fix it
 		// also a potential ddos vector
 
 		// delegates are passed the http context that notified us of the button click
-		public delegate Task Delegate(HttpContext context);
+		public delegate Task Delegate(HttpContext context, ReadOnlyDictionary<string, JSValue> formData);
 		// todo: wrap HttpContext to allow use with other HTTP suites
 
 		internal class CacheEntry {
@@ -117,27 +126,35 @@ namespace Lantern.Face.Parts {
 		}
 
 		// Locates and calls the identified delegate against the given HTTP context
-		public static Task Fire(string guid, HttpContext context){
+		public static async Task Fire(string guid, HttpContext context){
 			ulong time = GetCurrentTimestamp();
 			if (cache.Count > AutoCleanupMinimumCacheSize && time > lastCacheClearTime + AutoCleanupSecondsBetween) RemoveExpired();
 
 			if(!cache.Keys.Contains(guid)){
 				context.Response.ContentType = "text/plain";
-				return context.Response.WriteAsync("unavailable");
+				await context.Response.WriteAsync("unavailable");
+				return;
 			}
 
 			CacheEntry d = cache[guid];
 
 			if(d.Expired){
 				cache.Remove(guid);
-				return context.Response.WriteAsync("expired");
+				await context.Response.WriteAsync("expired");
+				return;
 			}
 
 			d.TouchedTime = time;
 			CacheEntry entry = cache[guid];
 			if(d.Button.Once) cache.Remove(guid);
-
-			return entry.Button._delegate(context);
+			string body = await new StreamReader(context.Request.Body).ReadToEndAsync();
+			try {
+				Console.WriteLine("json body: " + body);
+				ReadOnlyDictionary<string, JSValue> formData = body.Length == 0
+					? new ReadOnlyDictionary<string, JSValue>(new Dictionary<string, JSValue>())
+					: JSValue.ParseJSON(body);
+				await entry.Button._delegate(context, formData);
+			} catch (ParseError e) { } // ignore malformed body
 		}
 
 		// include DelegateButton's own requirement plus those of its content

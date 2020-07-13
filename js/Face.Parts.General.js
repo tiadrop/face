@@ -3,6 +3,7 @@ const plural = (num, noun) => {
 	if (num == 1) return `1 ${noun}`;
 	return `${num} ${noun}s`;
 };
+
 face.register("Face.Parts.TimeAgo", el => {
 	const startTime = el.data.timestamp;
 	delete el.data.timestamp;
@@ -30,6 +31,16 @@ face.register("Face.Parts.TimeAgo", el => {
 
 const delegateIds = {};
 let delegatePingInterval = null;
+
+const getFormInfo = form => {
+	var data = {};
+	console.log("processing form");
+	form.qsa("input,textarea,select").forEach(el => {
+		console.log("Trying", el.domElement);
+		if (el.attribs.name) data[el.attribs.name] = el.value;
+	});
+	return data;
+};
 
 face.register("Face.Parts.DelegateButton", el => {
 	const delegateId = el.data.delegateId;
@@ -63,10 +74,18 @@ face.register("Face.Parts.DelegateButton", el => {
 		}, 1000); // checking every second to account for browsers' potential interval restrictions eg in background tabs
 	}
 	el.on("click", () => {
-		fetch(".Face/delegate/" + delegateId, {
+		const request = {
 			method: "POST",
-			// todo include field values if the button exists in a <form>
-		}).then(r => r.text()).then(s => {
+		};
+		console.log("button parent:", el.parent);
+		let form = el.parent;
+		while (form) {
+			if (form.tag == "form") break;
+			console.log(form, "is not a form");
+			form = form.parent;
+		}
+		if (form) request.body = JSON.stringify(getFormInfo(form));
+		fetch(".Face/delegate/" + delegateId, request).then(r => r.text()).then(s => {
 			if (once) {
 				el.enabled = false;
 				if (expireInterval !== null) clearInterval(expireInterval);

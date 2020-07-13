@@ -89,7 +89,7 @@ class Homepage : Page {
 							Content = new Part[] {
 								new RawHTML("<em>Johnny Ten</em>, unscheduled<br>"),
 								new DelegateButton{
-									OnClick = context => {
+									OnClick = (context, post) => {
 										Console.WriteLine("Connecting call");
 										return Task.CompletedTask;
 									},

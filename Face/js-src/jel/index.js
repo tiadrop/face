@@ -387,11 +387,13 @@ const initHtmlNode = (spec, defineProperties) => {
 		absoluteLeft: { get: getAbsoluteLeft },
 		absoluteTop: { get: getAbsoluteTop },
 		qsa: { value: query => Array.from(element.querySelectorAll(query)).map(wrapHtmlNode) },
+		parent: { get: () => element.parentElement && wrapHtmlNode(element.parentElement), },
 		style: { 
 			get: () => styleAccessor,
 			set: (k, v) => { element.style[k] = v; },
 			enumerable: true 
 		},
+		tag: { get: () => element.tagName.toLowerCase() },
 		content: {
 			get: () => [...element.childNodes].map(node => node instanceof Text ? node : wrapHtmlNode(node)),
 			set: v => {
