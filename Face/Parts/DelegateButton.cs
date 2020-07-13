@@ -149,7 +149,6 @@ namespace Lantern.Face.Parts {
 			if(d.Button.Once) cache.Remove(guid);
 			string body = await new StreamReader(context.Request.Body).ReadToEndAsync();
 			try {
-				Console.WriteLine("json body: " + body);
 				ReadOnlyDictionary<string, JSValue> formData = body.Length == 0
 					? new ReadOnlyDictionary<string, JSValue>(new Dictionary<string, JSValue>())
 					: JSValue.ParseJSON(body);

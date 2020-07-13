@@ -216,6 +216,31 @@ namespace Lantern.Face.JSON {
 			return j.BooleanValue;
 		}
 
+		// JS array > native typed array
+		public static implicit operator string[](JSValue j) => j.ArrayValue.Select(m => (string)m).ToArray();
+		public static implicit operator bool[](JSValue j) => j.ArrayValue.Select(m => (bool)m).ToArray();
+		public static implicit operator int[](JSValue j) => j.ArrayValue.Select(m => (int)m).ToArray();
+		public static implicit operator double[](JSValue j) => j.ArrayValue.Select(m => (double)m).ToArray();
+
+		// JS object > native typed Dictionary
+		public static implicit operator ReadOnlyDictionary<string, string>(JSValue j)
+			=> new ReadOnlyDictionary<string, string>(new Dictionary<string, string>(j.ObjectValue.Select(kv =>
+				new KeyValuePair<string, string>(kv.Key, kv.Value)
+			)));
+		public static implicit operator ReadOnlyDictionary<string, bool>(JSValue j)
+			=> new ReadOnlyDictionary<string, bool>(new Dictionary<string, bool>(j.ObjectValue.Select(kv =>
+				new KeyValuePair<string, bool>(kv.Key, kv.Value)
+			)));
+		public static implicit operator ReadOnlyDictionary<string, int>(JSValue j)
+			=> new ReadOnlyDictionary<string, int>(new Dictionary<string, int>(j.ObjectValue.Select(kv =>
+				new KeyValuePair<string, int>(kv.Key, kv.Value)
+			)));
+		public static implicit operator ReadOnlyDictionary<string, double>(JSValue j)
+			=> new ReadOnlyDictionary<string, double>(new Dictionary<string, double>(j.ObjectValue.Select(kv =>
+				new KeyValuePair<string, double>(kv.Key, kv.Value)
+			)));
+
+
 
 		public static implicit operator JSValue[](JSValue j) => j.ArrayValue; // ArrayValue and ObjectValue getters already check the type
 		public static implicit operator ReadOnlyDictionary<string, JSValue>(JSValue j) => j.ObjectValue;
@@ -250,8 +275,8 @@ namespace Lantern.Face.JSON {
 				case JSType.Boolean: return _booleanValue.ToJSON();
 				case JSType.Number: return _numberValue.ToJSON();
 				case JSType.String: return _stringValue.ToJSON();
-				case JSType.Object: return ObjectValue.ToJSON();
-				case JSType.Array: return ArrayValue.ToJSON();
+				case JSType.Object: return ObjectValue.ToJSON(maxDepth);
+				case JSType.Array: return ArrayValue.ToJSON(maxDepth);
 				case JSType.Null: return "null";
 			}
 			return "";
