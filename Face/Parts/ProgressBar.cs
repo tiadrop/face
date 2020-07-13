@@ -15,7 +15,10 @@ namespace Lantern.Face.Parts {
 				Classes = new[]{ "face-progressbar-out" }
 			};
 			outer.Append(new DivElement() {
-				Classes = new[] { "face-progressbar-in" }
+				Classes = new[] { "face-progressbar-in" },
+				Attribs = new Element.Attributes{
+					["style"] = $"width:{_position * 100}%"
+				}
 			});
 			return await outer.RenderHTML();
 		}
