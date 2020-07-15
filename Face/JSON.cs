@@ -22,14 +22,14 @@ namespace Lantern.Face.JSON {
 		public static string ToJSON(this IDictionary<string, JSValue> dict, int maxDepth = JSValue.DefaultMaxDepth){
 			var sb = new StringBuilder();
 			sb.Append("{");
-			string[] colonicPairings = dict.Keys.Select<string, string>(key => {
+			var colonicPairings = dict.Keys.Select<string, string>(key => {
 				var value = dict[key];
 				var sb = new StringBuilder();
 				sb.Append(key.ToJSON());
 				sb.Append(":");
 				sb.Append(value.ToJSON(maxDepth - 1));
 				return sb.ToString();
-			}).ToArray();
+			});
 
 			sb.Append(string.Join(",", colonicPairings));
 
@@ -44,7 +44,7 @@ namespace Lantern.Face.JSON {
 			)).ToJSON();
 		public static string ToJSON(this IDictionary<string, string> dict)
 			=> new Dictionary<string, JSValue>(dict.Select(kv =>
-				new KeyValuePair<string, JSValue>(kv.Key, kv.Value)
+				new KeyValuePair<string, JSValue>(kv.Key, kv.Value) 
 			)).ToJSON();
 		public static string ToJSON(this IDictionary<string, double> dict)
 			=> new Dictionary<string, JSValue>(dict.Select(kv =>
@@ -94,6 +94,62 @@ namespace Lantern.Face.JSON {
 		public readonly ReadOnlyDictionary<string, JSValue> _ObjectValue;
 		public readonly JSValue[] _arrayValue;
 
+		public JSValue(string s) {
+			DataType = JSType.String;
+			_stringValue = s;
+		}
+		public JSValue(double n) {
+			DataType = JSType.Number;
+			_numberValue = n;
+		}
+		public JSValue(int n) {
+			DataType = JSType.Number;
+			_numberValue = Convert.ToDouble(n);
+		}
+		public JSValue(byte n) {
+			DataType = JSType.Number;
+			_numberValue = Convert.ToDouble(n);
+		}
+		public JSValue(short n) {
+			DataType = JSType.Number;
+			_numberValue = Convert.ToDouble(n);
+		}
+		public JSValue(uint n) {
+			DataType = JSType.Number;
+			_numberValue = Convert.ToDouble(n);
+		}
+		public JSValue(ushort n) {
+			DataType = JSType.Number;
+			_numberValue = Convert.ToDouble(n);
+		}
+		public JSValue(Int64 n) {
+			DataType = JSType.Number;
+			_numberValue = Convert.ToDouble(n);
+		}
+		public JSValue(UInt64 n) {
+			DataType = JSType.Number;
+			_numberValue = Convert.ToDouble(n);
+		}
+		public JSValue(bool b) {
+			DataType = JSType.Boolean;
+			_booleanValue = b;
+		}
+
+		public JSValue(JSValue[] array) {
+			DataType = JSType.Array;
+			_arrayValue = array;
+		}
+
+		private JSValue(JsNull nul) {
+			DataType = JSType.Null;
+		}
+
+		public JSValue(IDictionary<string, JSValue> properties) {
+			DataType = JSType.Object;
+			_ObjectValue = new ReadOnlyDictionary<string, JSValue>(properties);
+		}
+
+
 		public string StringValue {
 			get {
 				switch (DataType) {
@@ -140,38 +196,6 @@ namespace Lantern.Face.JSON {
 
 		public ReadOnlyDictionary<string, JSValue>.KeyCollection Keys => _ObjectValue.Keys;
 
-		public JSValue(string s) {
-			DataType = JSType.String;
-			_stringValue = s;
-		}
-		public JSValue(double n) {
-			DataType = JSType.Number;
-			_numberValue = n;
-		}
-		public JSValue(int n) {
-			DataType = JSType.Number;
-			_numberValue = Convert.ToDouble(n);
-		}
-		public JSValue(bool b) {
-			DataType = JSType.Boolean;
-			_booleanValue = b;
-		}
-
-		public JSValue(JSValue[] array) {
-			DataType = JSType.Array;
-			_arrayValue = array;
-		}
-
-		private JSValue(JsNull nul) {
-			DataType = JSType.Null;
-		}
-
-		public JSValue(IDictionary<string, JSValue> properties) {
-			DataType = JSType.Object;
-			_ObjectValue = new ReadOnlyDictionary<string, JSValue>(properties);
-		}
-
-
 		private class JsNull { }
 		public static readonly JSValue Null = new JSValue(new JsNull());
 
@@ -205,7 +229,7 @@ namespace Lantern.Face.JSON {
 			if (j.DataType != JSType.Number) throw new InvalidCastException("Implicitly casting JS " + j.DataType.ToString() + " to double is not allowed; consider jsValue.NumberValue");
 			return j.NumberValue;
 		}
-		public static implicit operator int(JSValue j) { // not actually sure about this one
+		public static implicit operator int(JSValue j) {
 			double value = j.NumberValue;
 			if(value != Math.Round(value)) throw new InvalidCastException("Lost data in implicit cast");
 			if (j.DataType != JSType.Number) throw new InvalidCastException("Implicitly casting JS " + j.DataType.ToString() + " to int is not allowed; consider jsValue.NumberValue");
@@ -241,25 +265,14 @@ namespace Lantern.Face.JSON {
 			)));
 
 
-
-		public static implicit operator JSValue[](JSValue j) => j.ArrayValue; // ArrayValue and ObjectValue getters already check the type
+		public static implicit operator JSValue[](JSValue j) => j.ArrayValue;
 		public static implicit operator ReadOnlyDictionary<string, JSValue>(JSValue j) => j.ObjectValue;
 
 		public override string ToString() => StringValue;
 
 		// indexers
-		public JSValue this[string property] {
-			get {
-				if (DataType != JSType.Object) throw new ArgumentException("Trying to access property of a " + DataType.ToString() + " value");
-				return ObjectValue[property];
-			}
-		}
-		public JSValue this[int index] {
-			get {
-				if (DataType != JSType.Array) throw new ArgumentException("Trying to access index of a " + DataType.ToString() + " value");
-				return ArrayValue[index];
-			}
-		}
+		public JSValue this[string property] => ObjectValue[property];
+		public JSValue this[int index] => ArrayValue[index];
 
 		public bool ContainsKey(string key) => ObjectValue.ContainsKey(key);
 		public bool Contains(JSValue value) => ArrayValue.Contains(value);
@@ -361,7 +374,6 @@ namespace Lantern.Face.JSON {
 					else if (current == 'r') { sb.Append("\r"); }
 					else if (current == 't') { sb.Append("\t"); }
 					else if (current == 'u') {
-						// todo codepoint encoding
 						var sequence = input.Substring(position + 1, 4);
 						if(sequence.Length != 4 || !new Regex("^[0-9a-f]{4}$").IsMatch(sequence)) throw new ParseError("Malformed \\u sequence at " + position);
 						sb.Append(char.ConvertFromUtf32(int.Parse(sequence, System.Globalization.NumberStyles.HexNumber)));
