@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.IO;
 using System.Linq;
-using Lantern.Face.JSON;
+using Lantern.Face.Json;
 
 namespace face.demo {
     public class Test {
@@ -112,7 +112,8 @@ namespace face.demo {
                 ("[0,[1,4,", "Past end"),
                 ("[0,[1,4,\"\\u\"]]", "Malformed"),
                 ("{\"hello wo", "Unclosed string"),
-                ("\"hello\": world}", "Unexpected"),
+                ("{\"hello\": world}", "Unexpected"),
+                ("[4, 5, 6}", "Unexpected"),
             }) {
                 ExpectException("Can't parse " + s.ToJson(), () => JsValue.ParseJson(s), expectedMessage);
             }
@@ -120,11 +121,12 @@ namespace face.demo {
             string json;
             json = "-5.2"; Assert($"ParseJson({json.ToJson()}) == -5.2", JsValue.ParseJson(json) == -5.2);
             json = "null"; Assert($"ParseJson({json.ToJson()}) == null", JsValue.ParseJson(json) == null);
-            ExpectException("Identify position of invalid @ \"[[-5.4x]]\"", () => JsValue.ParseJson("[[-5.4x]]"), "at input position 6");
-            ExpectException("Fail on malformed codepoint in [\"abc\\u9\"] ", () => JsValue.ParseJson("[\"abc\\u9\"]"), "Malformed \\u sequence");
-            ExpectException("Fail on malformed codepoint in [\"abc\\u123x\"] ", () => JsValue.ParseJson("[\"abc\\u123x\"]"), "Malformed \\u sequence");
+            json = "[[-5.4x]"; ExpectException("Identify position of invalid @ " + json.ToJson(), () => JsValue.ParseJson(json), "at input position 6");
+            json = "[\"abc\\u9\"]"; ExpectException("Fail on malformed codepoint in " + json.ToJson(), () => JsValue.ParseJson(json), "Malformed \\u sequence");
+            json = "[\"abc\\u98"; ExpectException("Fail on malformed codepoint in " + json.ToJson(), () => JsValue.ParseJson(json), "Malformed \\u sequence");
+            json = "[\"abc\\u123x\"]"; ExpectException("Fail on malformed codepoint in " + json.ToJson(), () => JsValue.ParseJson(json), "Malformed \\u sequence");
             ExpectException("Exception parsing empty string", () => JsValue.ParseJson(""), "Past end");
-            ExpectException("Exception parsing \"[\"", () => JsValue.ParseJson("["), "Past end");
+            json = "["; ExpectException("Exception parsing " + json.ToJson(), () => JsValue.ParseJson(json), "Past end");
         }
         
     }

@@ -7,7 +7,7 @@ using System.Threading.Tasks;
 using System.Text;
 using System.Collections;
 using System.Collections.Generic;
-using Lantern.Face.JSON;
+using Lantern.Face.Json;
 using Microsoft.AspNetCore.Http;
 using Lantern.Face.Parts;
 using Lantern.Face.Parts.HTML;
@@ -101,6 +101,7 @@ namespace Lantern.Face {
 			headSection.Append(new RawHTML(String.Join("", jsUrls.Select(url 
 				=> $"<script src=\"{url}\"></script>"
 			).ToArray())));
+			// todo: combine requires with jsUrls; hard insert <script .Face.js> if requires.length > 0
 			if(clientRequires.Length > 0){
 				headSection.Append(new OtherElement("script") {
 					Content = new RawHTML($"face.require({String.Join(",", clientRequires.Select(s => s.ToJson()))});setTimeout(face.apply,1)")

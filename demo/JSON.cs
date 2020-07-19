@@ -1,6 +1,6 @@
 using System;
 using System.IO;
-using Lantern.Face.JSON;
+using Lantern.Face.Json;
 using System.Collections.Generic;
 using System.Linq;
 using face.demo;

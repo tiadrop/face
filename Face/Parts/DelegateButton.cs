@@ -1,5 +1,4 @@
 using System.IO;
-using System.Buffers;
 using System.Collections.ObjectModel;
 using System.Security.Cryptography;
 using System.Linq;
@@ -8,7 +7,7 @@ using System.Collections.Generic;
 using System;
 using System.Threading.Tasks;
 using Lantern.Face.Parts.HTML;
-using Lantern.Face.JSON;
+using Lantern.Face.Json;
 
 namespace Lantern.Face.Parts {
 	public class DelegateButton : ButtonElement {
