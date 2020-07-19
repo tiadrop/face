@@ -46,7 +46,7 @@ face.register("Face.Parts.DelegateButton", el => {
 	delegateIds[delegateId] = el;
 	if (delegatePingInterval === null) {
 		delegatePingInterval = setInterval(() => {
-			fetch('.Face/delegate/ping', {
+			if(Object.keys(delegateIds).length) fetch('.Face/delegate/ping', {
 				method: "POST",
 				body: Object.keys(delegateIds).join('/')
 			});

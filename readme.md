@@ -6,7 +6,7 @@ Parts can be Elements. Element Parts expose methods and properties that pertain 
 
 Parts can be components; essentially factories for producing Element structures depending on their own applicable properties. See *Face/Parts/\** for examples of components. See *TimeAgo.cs* in particular for an example of client-side JavaScript involvement in components.
 
-There are two ways to involve JavaScript. The simplest is to `jsUrls.Add(url)` inside your Page derivative's `Prepare()` override. This will load the script at the *end* of the rendered Body via `face.require()`.
+There are two ways to involve JavaScript. The simplest is to `jsUrls.Add(url)` inside your Page derivative's `Prepare()` override. This will include the script in the rendered <head> via `face.require()`.
 
 Face adds another scripting mechanism which I've found to be convenient and enjoyable. An *element script* can be registered with `face.register()`, then it'll be called against all elements whose `data-script` attribute matches the registered name. Registration will usually happen in a .js file loaded via `jsUrls`, itself usually having been automatically included due to the optional Part override `GetClientRequires()`. Client requirements are considered when writing a Part but not when consuming it. See *TimeAgo.cs* and *Face.Parts.General.js* for an example of this.
 

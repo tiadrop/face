@@ -99,7 +99,6 @@ namespace Lantern.Face {
 			var sb = new StringBuilder();
 			sb.Append("<!DOCTYPE html><html>");
 			sb.Append(await headSection.RenderHTML());
-			sb.Append(await Body.RenderHTML());
 			sb.Append(String.Join("", jsUrls.Select(url => $"<script src=\"{url}\"></script>").ToArray()));
 
 			string[] clientRequires = Body.GetClientRequires();
@@ -108,6 +107,7 @@ namespace Lantern.Face {
 				sb.Append(String.Join(", ", clientRequires.Select(s => $"\"{s}\"")));
 				sb.Append(");</script>");
 			}
+			sb.Append(await Body.RenderHTML());
 			var s = sb.ToString();
 			return s;
 		}
