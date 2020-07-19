@@ -7,6 +7,7 @@ using System.Threading.Tasks;
 using System.Text;
 using System.Collections;
 using System.Collections.Generic;
+using Lantern.Face.JSON;
 using Microsoft.AspNetCore.Http;
 using Lantern.Face.Parts;
 using Lantern.Face.Parts.HTML;
@@ -95,18 +96,21 @@ namespace Lantern.Face {
 					["href"] = url
 				}
 			});
-			
+
+			string[] clientRequires = Body.GetClientRequires();
+			headSection.Append(new RawHTML(String.Join("", jsUrls.Select(url 
+				=> $"<script src=\"{url}\"></script>"
+			).ToArray())));
+			if(clientRequires.Length > 0){
+				headSection.Append(new OtherElement("script") {
+					Content = new RawHTML($"face.require({String.Join(",", clientRequires.Select(s => s.ToJson()))});setTimeout(face.apply,1)")
+				});
+			}
+
+
 			var sb = new StringBuilder();
 			sb.Append("<!DOCTYPE html><html>");
 			sb.Append(await headSection.RenderHTML());
-			sb.Append(String.Join("", jsUrls.Select(url => $"<script src=\"{url}\"></script>").ToArray()));
-
-			string[] clientRequires = Body.GetClientRequires();
-			if(clientRequires.Length > 0){
-				sb.Append($"<script>face.require(");
-				sb.Append(String.Join(", ", clientRequires.Select(s => $"\"{s}\"")));
-				sb.Append(");</script>");
-			}
 			sb.Append(await Body.RenderHTML());
 			var s = sb.ToString();
 			return s;
