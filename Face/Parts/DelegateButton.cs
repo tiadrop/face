@@ -153,7 +153,7 @@ namespace Lantern.Face.Parts {
 					? new ReadOnlyDictionary<string, JsValue>(new Dictionary<string, JsValue>())
 					: JsValue.ParseJson(body);
 				await entry.Button._delegate(context, formData);
-			} catch (ParseError e) { } // ignore malformed body
+			} catch (ParseError) { } // ignore malformed body
 		}
 
 		// include DelegateButton's own requirement plus those of its content
