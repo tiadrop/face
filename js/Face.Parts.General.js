@@ -22,10 +22,10 @@ face.register("Face.Parts.TimeAgo", el => {
 		const years = round(weeks / 52);
 		return plural(years, "year");
 	}
-	const update = () => {
-		el.content = get();
-	};
+	const update = () => el.content = get();
+	
 	update();
+	// interval is permanent and references el
 	setInterval(update, 1000);
 });
 
@@ -33,10 +33,8 @@ const delegateIds = {};
 let delegatePingInterval = null;
 
 const getFormInfo = form => {
-	var data = {};
-	console.log("processing form");
+	const data = {};
 	form.qsa("input,textarea,select").forEach(el => {
-		console.log("Trying", el.domElement);
 		if (el.attribs.name) data[el.attribs.name] = el.value;
 	});
 	return data;
@@ -66,9 +64,10 @@ face.register("Face.Parts.DelegateButton", el => {
 			if ((new Date()).getTime() / 1000 > expireTime) {
 				clearInterval(expireInterval);
 				expireInterval = null;
+				delete delegateIds[delegateId];
 				el.classes.add("Face_DelegateButton_expired");
 				el.attribs.title = "Action expired";
-				// todo client-side indicator of expiry (pass expire time as data attr)
+				// todo client-side indicator of expiry
 				el.enabled = false;
 			}
 		}, 1000); // checking every second to account for browsers' potential interval restrictions eg in background tabs
@@ -77,17 +76,16 @@ face.register("Face.Parts.DelegateButton", el => {
 		const request = {
 			method: "POST",
 		};
-		console.log("button parent:", el.parent);
 		let form = el.parent;
 		while (form) {
 			if (form.tag == "form") break;
-			console.log(form, "is not a form");
 			form = form.parent;
 		}
 		if (form) request.body = JSON.stringify(getFormInfo(form));
 		fetch(".Face/delegate/" + delegateId, request).then(r => r.text()).then(s => {
 			if (once) {
 				el.enabled = false;
+				delete delegateIds[delegateId];
 				if (expireInterval !== null) clearInterval(expireInterval);
 				expireInterval = null;
 			}
