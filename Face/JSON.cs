@@ -428,7 +428,7 @@ namespace Lantern.Face.JSON {
 			bool escaping = false;
 			position++; // skip first "
 			var sb = new StringBuilder();
-			if(position >= input.Length) throw new ParseError($"Unclosed string at input position {startPosition}");
+			if(position >= input.Length) throw new ParseError($"Unclosed string at input position {appendLineNumber(startPosition)}");
 			while(escaping || current != '"'){
 				if(escaping){
 					escaping = false;
@@ -451,14 +451,14 @@ namespace Lantern.Face.JSON {
 							break;
 					}
 					position++; 
-					if(position >= input.Length) throw new ParseError($"Unclosed string at input position {startPosition}");
+					if(position >= input.Length) throw new ParseError($"Unclosed string at input position {appendLineNumber(startPosition)}");
 					continue;
 				}
 				if(current == '\\'){
 					escaping = true;
 				} else sb.Append(current);
 				position++;
-				if(position >= input.Length) throw new ParseError($"Unclosed string at input position {startPosition}");
+				if(position >= input.Length) throw new ParseError($"Unclosed string at input position {appendLineNumber(startPosition)}");
 			}
 			return sb.ToString();
 		}
@@ -475,61 +475,71 @@ namespace Lantern.Face.JSON {
 						return found.ToArray();
 					}
 
-					found.Add(readValue());
+					// add to found if and when we find , or ] to keep correct index in error message
+					var value = readValue();
 
 					NextToken();
-					if (current == ']') return found.ToArray();
+					if (current == ']') {
+						found.Add(value);
+						return found.ToArray();
+					}
 					if (current != ',')
-						throw new ParseError($"Expected ',' or ']', found '{current}' at input position " +
-						                     position.ToString());
+						throw new ParseError($"Expected ',' or ']', found '{current}' at input position {appendLineNumber(position)}");
+					found.Add(value);
 				}
 			}
 			catch (Exception e) {
-				throw new ParseError($"Failed to parse array starting at input position {startPosition}, index {found.Count}", e);
+				throw new ParseError($"Failed to parse item #{found.Count} in array starting at input position {appendLineNumber(startPosition)}", e);
 			}
+		}
+
+		private string appendLineNumber(int pos) {
+			string s = pos.ToString();
+			Regex regex = new Regex("\r\n|\n");
+			int lineCount = regex.Matches(input.Substring(0, pos)).Count;
+			// needn't scan for a cr/lf if we've just found some
+			if (lineCount > 0 || regex.IsMatch(input)) s += $" (line {lineCount + 1})";
+			return s;
 		}
 
 		private JsValue readObject(){
 			var startPosition = position;
 			var result = new Dictionary<string, JsValue>();
-			try {
-				while (true) {
-					NextToken();
-					if (current == '}') return result;
-					if (current != '"')
-						throw new ParseError(
-							$"Expected property name, found '{current}' at input position {position.ToString()}");
-					string keyValue;
-					try {
-						keyValue = readValue();
-					}
-					catch (Exception e) {
-						throw new ParseError($"Failed to parse property name #{result.Count}", e);
-					}
-
-					NextToken();
-					if (current != ':')
-						throw new ParseError(
-							$"Expected ':', found '{current}' at input position {position.ToString()}");
-					NextToken();
-					JsValue value;
-					try {
-						value = readValue();
-					}
-					catch (Exception e) {
-						throw new ParseError($"Failed to parse value for property `{keyValue}`", e);
-					}
-
-					result[keyValue] = value;
-					NextToken();
-					if (current == '}') return result;
-					if (current != ',')
-						throw new ParseError(
-							$"Expected ',' or '{'}'}', found '{current}' at input position {position}");
+			while (true) {
+				NextToken();
+				if (current == '}') return result;
+				if (current != '"')
+					throw new ParseError(
+						$"Expected property name #{result.Count} in object starting at input position {appendLineNumber(startPosition)}, found '{current}' at input position {appendLineNumber(position)}");
+				string keyValue;
+				try {
+					keyValue = readValue();
 				}
-			}
-			catch (Exception e) {
-				throw new ParseError($"Failed to parse object starting at input position {startPosition}", e);
+				catch (Exception e) {
+					throw new ParseError(
+						$"Failed to parse property name #{result.Count} in object starting at input position {appendLineNumber(startPosition)}",
+						e);
+				}
+
+				NextToken();
+				if (current != ':')
+					throw new ParseError(
+						$"Expected ':' for property #{result.Count} {keyValue.ToJson()} in object starting at input position {appendLineNumber(startPosition)}, found '{current}' at input position {appendLineNumber(position)}");
+				NextToken();
+				JsValue value;
+				try {
+					value = readValue();
+				}
+				catch (Exception e) {
+					throw new ParseError($"Failed to parse value for property {keyValue.ToJson()} in object starting at input position {appendLineNumber(startPosition)}", e);
+				}
+
+				result[keyValue] = value;
+				NextToken();
+				if (current == '}') return result;
+				if (current != ',')
+					throw new ParseError(
+						$"Expected ',' or '{'}'}' in object starting at input position {appendLineNumber(startPosition)}, found '{current}' at input position {appendLineNumber(position)}");
 			}
 		}
 

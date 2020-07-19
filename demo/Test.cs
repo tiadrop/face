@@ -106,13 +106,20 @@ namespace face.demo {
             Assert("JsValue(5) == JsValue(5f)", new JsValue(5) == new JsValue(5f));
             Assert("JsValue(5) != JsValue(2)", new JsValue(5) != new JsValue(2));
             Assert("JsValue(5) != JsValue(\"5\")", new JsValue(5) != new JsValue("5"));
-            Assert("JsValue(5) == 5f", new JsValue(5) == 5f);
-            ExpectException("Can't parse \"-\"", () => JsValue.ParseJson("-"), "Unexpected");
-            ExpectException("Can't parse \"[1,4,\"", () => JsValue.ParseJson("[1,4,"), "Past end");
-            ExpectException("Can't parse \"{\\\"hello wo", () => JsValue.ParseJson("{\"hello wo"), "Unclosed string");
-            ExpectException("Can't parse \"{\\\"hello\\\": world}", () => JsValue.ParseJson("{\"hello\": world}"), "Unexpected");
-            Assert("ParseJson(\"-5.2\") == 5.2", JsValue.ParseJson("-5.2") == -5.2);
-            Assert("ParseJson(\"null\") == null", JsValue.ParseJson("null") == null);
+            Assert("JsValue.ParseJson(\"5\") == 5f", JsValue.ParseJson("5") == 5f);
+            foreach (var (s, expectedMessage) in new (string, string)[] {
+                ("-", "Unexpected"),
+                ("[0,[1,4,", "Past end"),
+                ("[0,[1,4,\"\\u\"]]", "Malformed"),
+                ("{\"hello wo", "Unclosed string"),
+                ("\"hello\": world}", "Unexpected"),
+            }) {
+                ExpectException("Can't parse " + s.ToJson(), () => JsValue.ParseJson(s), expectedMessage);
+            }
+            
+            string json;
+            json = "-5.2"; Assert($"ParseJson({json.ToJson()}) == -5.2", JsValue.ParseJson(json) == -5.2);
+            json = "null"; Assert($"ParseJson({json.ToJson()}) == null", JsValue.ParseJson(json) == null);
             ExpectException("Identify position of invalid @ \"[[-5.4x]]\"", () => JsValue.ParseJson("[[-5.4x]]"), "at input position 6");
             ExpectException("Fail on malformed codepoint in [\"abc\\u9\"] ", () => JsValue.ParseJson("[\"abc\\u9\"]"), "Malformed \\u sequence");
             ExpectException("Fail on malformed codepoint in [\"abc\\u123x\"] ", () => JsValue.ParseJson("[\"abc\\u123x\"]"), "Malformed \\u sequence");
