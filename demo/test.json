@@ -1,0 +1,17 @@
+{
+  "ints" : [ 0, 4, 5, 1],
+  "doubles" : [1, 3, 3.7,],
+  "strings" : ["Poland", "Gibraltar","Ethiopia" ],
+  "mixed" :   ["1", -5, null, false],
+  "structs"   : [
+    {
+      "name": "Henry",
+      "hobbies":["darts", "rambling"],
+      "age" :31 ,
+    },
+    {
+      "name": "Tina",
+      "hobbies": ["gaming", "biking"],
+    }
+  ]
+}

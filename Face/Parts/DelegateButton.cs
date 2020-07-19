@@ -21,7 +21,7 @@ namespace Lantern.Face.Parts {
 		// also a potential ddos vector
 
 		// delegates are passed the http context that notified us of the button click
-		public delegate Task Delegate(HttpContext context, ReadOnlyDictionary<string, JSValue> formData);
+		public delegate Task Delegate(HttpContext context, ReadOnlyDictionary<string, JsValue> formData);
 		// todo: wrap HttpContext to allow use with other HTTP suites
 
 		internal class CacheEntry {
@@ -149,9 +149,9 @@ namespace Lantern.Face.Parts {
 			if(d.Button.Once) cache.Remove(guid);
 			string body = await new StreamReader(context.Request.Body).ReadToEndAsync();
 			try {
-				ReadOnlyDictionary<string, JSValue> formData = body.Length == 0
-					? new ReadOnlyDictionary<string, JSValue>(new Dictionary<string, JSValue>())
-					: JSValue.ParseJSON(body);
+				ReadOnlyDictionary<string, JsValue> formData = body.Length == 0
+					? new ReadOnlyDictionary<string, JsValue>(new Dictionary<string, JsValue>())
+					: JsValue.ParseJson(body);
 				await entry.Button._delegate(context, formData);
 			} catch (ParseError e) { } // ignore malformed body
 		}

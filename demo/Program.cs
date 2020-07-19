@@ -114,7 +114,7 @@ namespace Lantern.FaceDemo {
 
 	public class Program {
 		public static void Main(string[] args) {
-			JSONDemo.Run();
+			JsonDemo.Run();
 			Server.Start();
 		}
 	}
