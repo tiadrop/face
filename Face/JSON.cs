@@ -199,6 +199,11 @@ namespace Lantern.Face.JSON {
 		private class JsNull { }
 		public static readonly JsValue Null = new JsValue(new JsNull());
 
+		public bool IsNumber => DataType == JsType.Number;
+		public bool IsString => DataType == JsType.String;
+		public bool IsBoolean => DataType == JsType.Boolean;
+		public bool IsArray => DataType == JsType.Array;
+		public bool IsObject => DataType == JsType.Object;
 		public bool IsNull => DataType == JsType.Null;
 
 		// native -> JS
@@ -223,8 +228,8 @@ namespace Lantern.Face.JSON {
 			return j.StringValue;
 		}
 		public static implicit operator double(JsValue j) {
-			if(j.DataType == JsType.String) return ParseJson(j.StringValue).NumberValue;
-			if (j.DataType != JsType.Number) throw new InvalidCastException("Implicitly casting JS " + j.DataType.ToString() + " to double is not allowed; consider jsValue.NumberValue");
+			if(j.IsString) return ParseJson(j.StringValue).NumberValue;
+			if (!j.IsNumber) throw new InvalidCastException("Implicitly casting JS " + j.DataType.ToString() + " to double is not allowed; consider jsValue.NumberValue");
 			return j.NumberValue;
 		}
 		public static implicit operator int(JsValue j) {
@@ -321,15 +326,15 @@ namespace Lantern.Face.JSON {
 					case JsType.Object: return object.ReferenceEquals(obj, this) || object.ReferenceEquals(obj, _objectValue);					
 				}
 			}
-			if (obj == null) return DataType == JsType.Null;
-			if (obj is string s) return s == _stringValue;
-			if (obj is double d) return d == _numberValue;
-			if (obj is bool b) return b == _booleanValue;
-			if (obj is int i) return Convert.ToDouble(i) == _numberValue;
-			if (obj is long l) return Convert.ToDouble(l) == _numberValue;
-			if (obj is uint ui) return Convert.ToDouble(ui) == _numberValue;
-			if (obj is ulong ul) return Convert.ToDouble(ul) == _numberValue;
-			if (obj is byte by) return Convert.ToDouble(by) == _numberValue;
+			if (obj == null) return IsNull;
+			if (obj is string s) return IsString && s == _stringValue;
+			if (obj is bool b) return IsBoolean && b == _booleanValue;
+			if (obj is double d) return IsNumber && d == _numberValue;
+			if (obj is int i) return IsNumber && Convert.ToDouble(i) == _numberValue;
+			if (obj is long l) return IsNumber && Convert.ToDouble(l) == _numberValue;
+			if (obj is uint ui) return IsNumber && Convert.ToDouble(ui) == _numberValue;
+			if (obj is ulong ul) return IsNumber && Convert.ToDouble(ul) == _numberValue;
+			if (obj is byte by) return IsNumber && Convert.ToDouble(by) == _numberValue;
 			return false;
 		}
 
@@ -380,51 +385,42 @@ namespace Lantern.Face.JSON {
 		}
 		
 		private JsValue readValue() {
-			var startPosition = position;
-			JsType? symbolType = null;
-			try {
-				if (current == '"') {
-					symbolType = JsType.String;
-					return readString();
-				}
-				if (current == '[') {
-					symbolType = JsType.Array;
-					return readArray();
-				}
-
-				if (current == '{') {
-					symbolType = JsType.Object;
-					return readObject();
-				}
-				if (input.Length - position >= 4 && input.Substring(position, 4) == "null") {
-					position += 3;
-					return JsValue.Null;
-				}
-
-				if (input.Length - position >= 4 && input.Substring(position, 4) == "true") {
-					position += 3;
-					return true;
-				}
-
-				if (input.Length - position >= 5 && input.Substring(position, 5) == "false") {
-					position += 4;
-					return false;
-				}
-
-				var numberMatch = new Regex("-?\\d*\\.?\\d+").Match(input, position);
-				if (numberMatch.Success) {
-					symbolType = JsType.Number;
-					string cap = numberMatch.Captures[0].Value;
-					double num = Convert.ToDouble(cap);
-					position += numberMatch.Captures[0].Length - 1;
-					return num;
-				}
-
-				throw new ParseError($"Unexpected {current} at input position {position}");
+			if (current == '"') return readString();
+			if (current == '[') return readArray();
+			if (current == '{') return readObject();
+			if (input.Length - position >= 4 && input.Substring(position, 4) == "null") {
+				position += 3;
+				return JsValue.Null;
 			}
-			catch (Exception e) {
-				throw new ParseError($"Failed to parse {(symbolType == null ? "unknown symbol" : symbolType.ToString())} starting at input position {startPosition}", e);
+
+			if (input.Length - position >= 4 && input.Substring(position, 4) == "true") {
+				position += 3;
+				return true;
 			}
+
+			if (input.Length - position >= 5 && input.Substring(position, 5) == "false") {
+				position += 4;
+				return false;
+			}
+
+			var numberMatch = new Regex("-?\\d*\\.?\\d+").Match(input, position);
+			if (numberMatch.Success) {
+				string cap = numberMatch.Captures[0].Value;
+				double num = Convert.ToDouble(cap);
+				position += numberMatch.Captures[0].Length - 1;
+				return num;
+			}
+
+			throw new ParseError($"Unexpected '{current}' at input position {position}");
+		}
+
+		private string readEscapedCodepoint() {
+			if(input.Length - position <= 4) throw new ParseError($"Malformed \\u sequence at input position {position}");
+			var sequence = input.Substring(position + 1, 4);
+			var exp = new Regex("^[0-9a-f]{4}$");
+			if(sequence.Length != 4 || !exp.IsMatch(sequence)) throw new ParseError($"Malformed \\u sequence at input position {position}");
+			position += 5;
+			return char.ConvertFromUtf32(int.Parse(sequence, System.Globalization.NumberStyles.HexNumber));
 		}
 
 		private string readString(){
@@ -447,12 +443,7 @@ namespace Lantern.Face.JSON {
 							sb.Append("\t");
 							break;
 						case 'u': {
-							if(input.Length - position <= 4) throw new ParseError($"Malformed \\u sequence at input position {position}");
-							var sequence = input.Substring(position + 1, 4);
-							var exp = new Regex("^[0-9a-f]{4}$");
-							if(sequence.Length != 4 || !exp.IsMatch(sequence)) throw new ParseError($"Malformed \\u sequence at input position {position}");
-							sb.Append(char.ConvertFromUtf32(int.Parse(sequence, System.Globalization.NumberStyles.HexNumber)));
-							position += 5;
+							sb.Append(readEscapedCodepoint());
 							continue;
 						}
 						default:
@@ -477,35 +468,68 @@ namespace Lantern.Face.JSON {
 		private JsValue[] readArray(){
 			var startPosition = position;
 			List<JsValue> found = new List<JsValue>();
-			while(true){
-				NextToken();
-				if (current == ']') {
-					return found.ToArray();
-				}
-				found.Add(readValue());
+			try {
+				while (true) {
+					NextToken();
+					if (current == ']') {
+						return found.ToArray();
+					}
 
-				NextToken();
-				if(current == ']') return found.ToArray();
-				if(current != ',') throw new ParseError($"Expected ',' or ']', found '{current}' at input position " + position.ToString());
+					found.Add(readValue());
+
+					NextToken();
+					if (current == ']') return found.ToArray();
+					if (current != ',')
+						throw new ParseError($"Expected ',' or ']', found '{current}' at input position " +
+						                     position.ToString());
+				}
+			}
+			catch (Exception e) {
+				throw new ParseError($"Failed to parse array starting at input position {startPosition}, index {found.Count}", e);
 			}
 		}
 
 		private JsValue readObject(){
 			var startPosition = position;
 			var result = new Dictionary<string, JsValue>();
-			while(true){
-				NextToken();
-				if(current == '}') return result;
-				if(current != '"') throw new ParseError($"Expected property name, found '{current}' at input position {position.ToString()}");
-				var keyValue = readValue();
-				NextToken();
-				if(current != ':') throw new ParseError($"Expected ':', found '{current}' at input position {position.ToString()}");
-				NextToken();
-				var value = readValue();
-				result[keyValue] = value;
-				NextToken();
-				if (current == '}') return result;
-				if (current != ',') throw new ParseError($"Expected ',' or '{'}'}', found '{current}' at input position {position}");
+			try {
+				while (true) {
+					NextToken();
+					if (current == '}') return result;
+					if (current != '"')
+						throw new ParseError(
+							$"Expected property name, found '{current}' at input position {position.ToString()}");
+					string keyValue;
+					try {
+						keyValue = readValue();
+					}
+					catch (Exception e) {
+						throw new ParseError($"Failed to parse property name #{result.Count}", e);
+					}
+
+					NextToken();
+					if (current != ':')
+						throw new ParseError(
+							$"Expected ':', found '{current}' at input position {position.ToString()}");
+					NextToken();
+					JsValue value;
+					try {
+						value = readValue();
+					}
+					catch (Exception e) {
+						throw new ParseError($"Failed to parse value for property `{keyValue}`", e);
+					}
+
+					result[keyValue] = value;
+					NextToken();
+					if (current == '}') return result;
+					if (current != ',')
+						throw new ParseError(
+							$"Expected ',' or '{'}'}', found '{current}' at input position {position}");
+				}
+			}
+			catch (Exception e) {
+				throw new ParseError($"Failed to parse object starting at input position {startPosition}", e);
 			}
 		}
 

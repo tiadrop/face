@@ -70,9 +70,7 @@ namespace face.demo {
                 }
               ]
             } */
-            ExpectException("Can't cast object to string", () => {
-                Console.WriteLine(jv.StringValue);
-            }, "Object as string");
+            ExpectException("Can't cast object to string", () => Console.WriteLine(jv.StringValue), "Object as string");
             Assert("Tina likes biking", jv["structs"].ArrayValue.First(v => v["name"] == "Tina")["hobbies"].Contains("biking") == true);
             var henry = jv["structs"].ArrayValue.First((v => v["name"] == "Henry"));
             var tina = jv["structs"].ArrayValue.First(v => v["name"] == "Tina");
@@ -80,20 +78,12 @@ namespace face.demo {
             Assert("Henry's first hobby is darts", henry["hobbies"][0] == "darts");
             Assert("Henry's age is known", henry.ContainsKey("age"));
             Assert("Tina's age is not known", !tina.ContainsKey("age"));
-            ExpectException("Non-object ContainsKey exception", () => {
-                Assert("(Invalid)", henry["age"].ContainsKey("turtles"));
-            }, "as object");
-            ExpectException("Can't read numeric key from JS Object", () => {
-                Console.WriteLine(jv[5].StringValue);
-            }, "Can't read JS Object as array");
-            ExpectException("Can't read string key from JS Array", () => {
-                Console.WriteLine(jv["doubles"]["two"].NumberValue);
-            }, "Can't read JS Array as object");
+            ExpectException("Non-object ContainsKey exception", () => henry["age"].ContainsKey("turtles"), "as object");
+            ExpectException("Can't read numeric key from JS Object", () => Console.WriteLine(jv[5].StringValue), "Can't read JS Object as array");
+            ExpectException("Can't read string key from JS Array", () => Console.WriteLine(jv["doubles"]["two"].NumberValue), "Can't read JS Array as object");
             int[] ints = jv["ints"];
             Assert("Last int is 1", ints.Last() == 1);
-            ExpectException("Can't cast number array with float to int[]", () => {
-                ints = jv["doubles"];
-            }, "Lossy cast");
+            ExpectException("Can't cast number array with float to int[]", () => { ints = jv["doubles"]; }, "Lossy cast");
             string[] strings = jv["strings"];
             Assert("Strings are Poland, Gibraltar, Ethiopia", string.Join(", ", strings) == "Poland, Gibraltar, Ethiopia");
             Assert("There are 2 structs", jv["structs"].Count == 2);
@@ -104,9 +94,7 @@ namespace face.demo {
             Assert("Can explicit cast JS num to string", jv["ints"][0].StringValue == "0");
             JsValue[] structs = jv["structs"];
             var structsJs = structs.ToJson();
-            ExpectException("Parse error with junk appended", () => {
-                var invalid = JsValue.ParseJson(structsJs + "   .");
-            }, "Unexpected");
+            ExpectException("Parse error with junk appended", () => JsValue.ParseJson(structsJs + "   ."), "Unexpected");
             ExpectException("Parse error with junk prepended", () => JsValue.ParseJson("-  " + testJson), "Unexpected");
             ExpectException("Parse error with { prepended", () => JsValue.ParseJson("{" + testJson), "Expected property");
             ExpectException("Parse error with [ prepended", () => JsValue.ParseJson("[" + testJson), "Past end");
@@ -121,12 +109,15 @@ namespace face.demo {
             Assert("JsValue(5) == 5f", new JsValue(5) == 5f);
             ExpectException("Can't parse \"-\"", () => JsValue.ParseJson("-"), "Unexpected");
             ExpectException("Can't parse \"[1,4,\"", () => JsValue.ParseJson("[1,4,"), "Past end");
-            ExpectException("Can't parse \"{\"hello wo", () => JsValue.ParseJson("{\"hello wo"), "Unclosed string");
+            ExpectException("Can't parse \"{\\\"hello wo", () => JsValue.ParseJson("{\"hello wo"), "Unclosed string");
+            ExpectException("Can't parse \"{\\\"hello\\\": world}", () => JsValue.ParseJson("{\"hello\": world}"), "Unexpected");
             Assert("ParseJson(\"-5.2\") == 5.2", JsValue.ParseJson("-5.2") == -5.2);
             Assert("ParseJson(\"null\") == null", JsValue.ParseJson("null") == null);
             ExpectException("Identify position of invalid @ \"[[-5.4x]]\"", () => JsValue.ParseJson("[[-5.4x]]"), "at input position 6");
             ExpectException("Fail on malformed codepoint in [\"abc\\u9\"] ", () => JsValue.ParseJson("[\"abc\\u9\"]"), "Malformed \\u sequence");
             ExpectException("Fail on malformed codepoint in [\"abc\\u123x\"] ", () => JsValue.ParseJson("[\"abc\\u123x\"]"), "Malformed \\u sequence");
+            ExpectException("Exception parsing empty string", () => JsValue.ParseJson(""), "Past end");
+            ExpectException("Exception parsing \"[\"", () => JsValue.ParseJson("["), "Past end");
         }
         
     }
