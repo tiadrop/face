@@ -1,7 +1,7 @@
 using System;
 using System.Threading.Tasks;
 using Lantern.Face;
-using Lantern.Face.Parts.HTML;
+using Lantern.Face.Parts.Html;
 namespace Lantern.Face.Parts {
 	class TimeAgo : SpanElement {
 		public TimeAgo(Int64 timestamp){

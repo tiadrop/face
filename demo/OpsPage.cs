@@ -1,5 +1,5 @@
 using Lantern.Face;
-using Lantern.Face.Parts.HTML;
+using Lantern.Face.Parts.Html;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Http;
 
@@ -16,13 +16,13 @@ namespace Lantern.FaceDemo {
 					Content = new PlainText("Ops")
 				},
 				new PlainText("Here's an image"),
-				new BreakElement()
+				new BreakElement(),
+				new ImageElement() {
+					Classes = new[] { "crabs" },
+					SourceUrl = "https://www.citarella.com/media/catalog/product/cache/1/image/97a78116f02a369697db694bbb2dfa59/0/2/024029200000_01_1.jpg"
+				},
+				":D"
 			};
-
-			parts.Add(new ImageElement() {
-				Classes = new[] { "crabs" },
-				SourceUrl = "https://www.citarella.com/media/catalog/product/cache/1/image/97a78116f02a369697db694bbb2dfa59/0/2/024029200000_01_1.jpg"
-			});
 
 			parts.Add(":D");
 

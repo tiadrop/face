@@ -1,6 +1,6 @@
 using System.Threading.Tasks;
 using Lantern.Face;
-using Lantern.Face.Parts.HTML;
+using Lantern.Face.Parts.Html;
 namespace Lantern.FaceDemo {
 	public class EventListItem : ListItemElement {
 		private LabelElement _label = new LabelElement();

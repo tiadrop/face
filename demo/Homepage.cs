@@ -1,7 +1,7 @@
 using System;
 using Lantern.Face;
 using Lantern.Face.Parts;
-using Lantern.Face.Parts.HTML;
+using Lantern.Face.Parts.Html;
 using System.Threading.Tasks; 
 using Microsoft.AspNetCore.Http;
 using Lantern.FaceDemo;

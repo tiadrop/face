@@ -1,5 +1,5 @@
 using System.Threading.Tasks;
-using Lantern.Face.Parts.HTML;
+using Lantern.Face.Parts.Html;
 using Lantern.Face.Parts;
 namespace Lantern.Face.Parts {
 	class ProgressBar : Part {

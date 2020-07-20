@@ -1,7 +1,7 @@
 using System.Net;
 using System.Linq;
 using System;
-using Lantern.Face.Parts.HTML;
+using Lantern.Face.Parts.Html;
 using Lantern.Face.Parts;
 using Lantern.Face;
 using System.Collections.Generic;

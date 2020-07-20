@@ -7,7 +7,7 @@ using System.Text;
 using System.Linq;
 using Lantern.Face;
 
-namespace Lantern.Face.Parts.HTML {
+namespace Lantern.Face.Parts.Html {
 
 	public abstract class Element<TChild> : Part where TChild : Part {
 

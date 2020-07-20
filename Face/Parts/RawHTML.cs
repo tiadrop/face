@@ -1,6 +1,6 @@
 using Lantern.Face;
 using System.Threading.Tasks;
-namespace Lantern.Face.Parts.HTML {
+namespace Lantern.Face.Parts.Html {
 	class RawHTML : Part {
 		private string _s;
 		public RawHTML(string html) {

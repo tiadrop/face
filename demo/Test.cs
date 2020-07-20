@@ -71,10 +71,10 @@ namespace face.demo {
               ]
             } */
             ExpectException("Can't cast object to string", () => Console.WriteLine(jv.StringValue), "Object as string");
-            Assert("Tina likes biking", jv["structs"].ArrayValue.First(v => v["name"] == "Tina")["hobbies"].Contains("biking") == true);
+            Assert("Tina likes biking", jv["structs"].ArrayValue.First(v => v["name"] == "Tina")["hobbies"].Contains("biking"));
             var henry = jv["structs"].ArrayValue.First((v => v["name"] == "Henry"));
             var tina = jv["structs"].ArrayValue.First(v => v["name"] == "Tina");
-            Assert("Henry doesn't like biking", henry["hobbies"].Contains("biking") == false);
+            Assert("Henry doesn't like biking", !henry["hobbies"].Contains("biking"));
             Assert("Henry's first hobby is darts", henry["hobbies"][0] == "darts");
             Assert("Henry's age is known", henry.ContainsKey("age"));
             Assert("Tina's age is not known", !tina.ContainsKey("age"));

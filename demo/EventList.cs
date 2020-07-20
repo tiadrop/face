@@ -1,5 +1,5 @@
 using System.Linq;
-using Lantern.Face.Parts.HTML;
+using Lantern.Face.Parts.Html;
 
 namespace Lantern.FaceDemo {
 	public class EventLog : Element<EventListItem> {

@@ -2,7 +2,7 @@ using System.Linq;
 using System;
 using System.Threading.Tasks;
 using System.Collections.Generic;
-using Lantern.Face.Parts.HTML;
+using Lantern.Face.Parts.Html;
 
 namespace Lantern.Face {
 

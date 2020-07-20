@@ -10,7 +10,7 @@ using System.Collections.Generic;
 using Lantern.Face.Json;
 using Microsoft.AspNetCore.Http;
 using Lantern.Face.Parts;
-using Lantern.Face.Parts.HTML;
+using Lantern.Face.Parts.Html;
 
 namespace Lantern.Face {
 	public class UniqueList<T> : IEnumerable<T> {

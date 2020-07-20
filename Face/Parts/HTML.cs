@@ -2,7 +2,7 @@ using System.Collections.Generic;
 using System;
 using System.Linq;
 
-namespace Lantern.Face.Parts.HTML {
+namespace Lantern.Face.Parts.Html {
 
 	public abstract class InteractiveElement<TChild> : Element<TChild> where TChild : Part {
 		public InteractiveElement(string tag) : base(tag) { }
