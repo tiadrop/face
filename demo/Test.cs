@@ -113,7 +113,7 @@ namespace face.demo {
                 ("[0,[1,4,\"\\u\"]]", "Malformed"),
                 ("{\"hello wo", "Unclosed string"),
                 ("{\"hello\": world}", "Unexpected"),
-                ("[4, 5, 6}", "Unexpected"),
+                ("[4, 5, 6}", "found '}'"),
             }) {
                 ExpectException("Can't parse " + s.ToJson(), () => JsValue.ParseJson(s), expectedMessage);
             }
