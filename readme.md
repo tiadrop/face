@@ -6,13 +6,15 @@ Parts can be Elements. Element Parts expose methods and properties that pertain 
 
 Parts can be components; essentially factories for producing Element structures depending on their own applicable properties. See *Face/Parts/\** for examples of components. See *TimeAgo.cs* in particular for an example of client-side JavaScript involvement in components.
 
-There are two ways to involve JavaScript. The simplest is to `jsUrls.Add(url)` inside your Page derivative's `Prepare()` override. This will include the script in the rendered <head> via `face.require()`.
+There are two ways to involve JavaScript. The simplest is to `JsUrls.Add(url)` inside your Page derivative's `Prepare()` override. This will include the script in the rendered <head> via `face.require()`.
 
-Face adds another scripting mechanism which I've found to be convenient and enjoyable. An *element script* can be registered with `face.register()`, then it'll be called against all elements whose `data-script` attribute matches the registered name. Registration will usually happen in a .js file loaded via `jsUrls`, itself usually having been automatically included due to the optional Part override `GetClientRequires()`. Client requirements are considered when writing a Part but not when consuming it. See *TimeAgo.cs* and *Face.Parts.General.js* for an example of this.
+Face adds another scripting mechanism which I've found to be convenient and enjoyable. An *element script* can be registered with `face.register()`, then it'll be called against all elements whose `data-script` attribute matches the registered name. Registration will usually happen in a .js file loaded via `Page.JsUrls`, itself usually having been automatically included due to the optional Part override `GetClientRequires()`. Client requirements are considered when writing a Part but not when consuming it. See *TimeAgo.cs* and *Face.Parts.General.js* for an example of this.
 
 The element script system was designed to allow for asynchronous initialisation. Pass a `Promise` to `face.await()` in your custom JS file and we'll wait until your script's loaded and ready.
 
-After dynamically adding content `face.apply()` should be called, optionally passing in the element containing the new content, to apply element scripts. `face.require()` may also be called freely to load dependencies of such content, or they could be pre-emptively added to the Page's `jsUrls`.
+After dynamically adding content `face.apply()` should be called, optionally passing in the element containing the new content, to apply element scripts. `face.require()` may also be called freely to load dependencies of such content, or they could be preemptively added to the Page's `JsUrls`.
+
+CSS links can likewise be added to a Page's head via `page.CssUrls`.
 
 Reading an Element's ID will generate one if empty, so we can think of all Elements as simply 'having' a unique ID.
 
