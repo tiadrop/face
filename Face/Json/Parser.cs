@@ -138,7 +138,7 @@ namespace Lantern.Face.Json {
         /// </summary>
         /// <returns></returns>
         /// <exception cref="ParseError"></exception>
-        private string readString(bool propertyKey = false){
+        private string readString(){
             bool escaping = false;
             if (relaxed && current != '"') {
                 var match = unquotedKeyRegex.Match(input, position);
