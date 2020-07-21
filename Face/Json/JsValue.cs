@@ -299,11 +299,12 @@ namespace Lantern.Face.Json {
 		}
 
 		/// <summary>
-		/// Creates a JsValue object from a JSON-formatted strong
+		/// Produces a JsValue object from a JSON-formatted string
 		/// </summary>
-		/// <param name="json">A JSON-formatted string</param>
-		/// <returns>An object representing the data structure expressed in the input JSON string</returns>
-		public static JsValue ParseJson(string json) => Parser.Parse(json);
+		/// <param name="json">JSON-formatted string</param>
+		/// <param name="relaxed">True to allow // comments and unquoted property names</param>
+		/// <returns>Object representing the structure defined in JSON</returns>
+		public static JsValue ParseJson(string json, bool relaxed = false) => Parser.Parse(json, relaxed);
 
 		public override bool Equals(object obj) {
 			if(obj is JsValue jv){

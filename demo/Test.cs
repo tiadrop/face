@@ -134,6 +134,13 @@ namespace face.demo {
             ExpectException("Exception parsing empty string", () => JsValue.ParseJson(""), "Past end");
             json = "["; ExpectException("Exception parsing " + json.ToJson(), () => JsValue.ParseJson(json), "Past end");
             json = "null"; ExpectException($"Null reference from parse({json.ToJson()})[\"key\"]", () => Console.Write(JsValue.ParseJson(json)["BLM ✊🏿"].StringValue), "Object reference not set");
+            json = "{test: 5}"; ExpectException($"Does not allow unquoted strings", () => Console.Write(JsValue.ParseJson(json)["test✊🏿"].StringValue), "Expected property name");
+            
+            Assert("Allows unquoted keys in relaxed mode", JsValue.ParseJson("{test: 5}", true)["test"] == 5);
+
+            json = "{// a comment\ntest: 5}"; ExpectException($"Does not allow // comments", () => Console.Write(JsValue.ParseJson(json)["test✊🏿"].StringValue), "Expected property name");
+            Assert("Allows // comments in relaxed mode", JsValue.ParseJson("{// a comment\ntest: 5}", true)["test"] == 5);
+            
         }
         
     }
