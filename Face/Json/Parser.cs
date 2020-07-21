@@ -36,6 +36,8 @@ namespace Lantern.Face.Json {
             return result;
         }
        
+        private static readonly Regex crLfRegex = new Regex("\r\n|\r|\n");
+
         /// <summary>
         /// Moves the read position to the next meaningful symbol.
         /// </summary>
@@ -50,8 +52,7 @@ namespace Lantern.Face.Json {
             }
 
             if (relaxed && position < input.Length - 1 && current == '/' && input[position + 1] == '/') { // skip comment if relaxed
-                var regex = new Regex("\r\n|\r|\n");
-                var nextLine = regex.Match(input, position);
+                var nextLine = crLfRegex.Match(input, position);
                 if (nextLine.Success) {
                     position = nextLine.Index;
                     NextToken(expectEot);
@@ -68,10 +69,9 @@ namespace Lantern.Face.Json {
         /// <returns>E.g. "61 (line 4)"</returns>
         private string appendLineNumber(int pos) {
             string s = pos.ToString();
-            Regex regex = new Regex("\r\n|\n|\r");
-            int lineCount = regex.Matches(input.Substring(0, pos)).Count;
+            int lineCount = crLfRegex.Matches(input.Substring(0, pos)).Count;
             // needn't scan for a cr/lf if we've just found some
-            if (lineCount > 0 || regex.IsMatch(input)) s += $" (line {lineCount + 1})";
+            if (lineCount > 0 || crLfRegex.IsMatch(input)) s += $" (line {lineCount + 1})";
             return s;
         }
 
@@ -79,6 +79,8 @@ namespace Lantern.Face.Json {
         /// A string representation of the current read position for output in exception messages.
         /// </summary>
         private string positionWithLine => appendLineNumber(position);
+
+        private static readonly Regex numberMatchRegex = new Regex("\\G-?\\d*\\.?\\d+");
 
         /// <summary>
         /// Reads a value from input and places the read position at the end.
@@ -104,7 +106,7 @@ namespace Lantern.Face.Json {
                 return false;
             }
 
-            var numberMatch = new Regex("\\G-?\\d*\\.?\\d+").Match(input, position);
+            var numberMatch = numberMatchRegex.Match(input, position);
             if (numberMatch.Success) {
                 string cap = numberMatch.Captures[0].Value;
                 double num = Convert.ToDouble(cap);
@@ -115,28 +117,31 @@ namespace Lantern.Face.Json {
             throw new ParseError($"Unexpected '{current}' at input position {positionWithLine}");
         }
 
+        private static readonly Regex escapedCodePointRegex = new Regex("\\G[0-9a-f]{4}");
+
         /// <summary>
         /// Reads the next four characters as a hexadecimal symbol reference and places the read position at the end.
         /// </summary>
         /// <returns>String containing the referenced character</returns>
         /// <exception cref="ParseError"></exception>
         private string readEscapedCodepoint() {
-            var sequenceMatch = new Regex("\\G[0-9a-f]{4}").Match(input, position + 1);
+            var sequenceMatch = escapedCodePointRegex.Match(input, position + 1);
             if(!sequenceMatch.Success) throw new ParseError($"Malformed \\u sequence at input position {positionWithLine}");
             position += 4;
             return char.ConvertFromUtf32(int.Parse(sequenceMatch.Value, System.Globalization.NumberStyles.HexNumber));
         }
+        
+        private static readonly Regex unquotedKeyRegex = new Regex("\\G\\w+");
         
         /// <summary>
         /// Reads a string value from input and places the read position at the closing '"'. Assumes the current character is '"'.
         /// </summary>
         /// <returns></returns>
         /// <exception cref="ParseError"></exception>
-        private string readString(){
+        private string readString(bool propertyKey = false){
             bool escaping = false;
             if (relaxed && current != '"') {
-                var regex = new Regex("\\G\\w+");
-                var match = regex.Match(input, position);
+                var match = unquotedKeyRegex.Match(input, position);
                 if (match.Success) {
                     position += match.Value.Length - 1;
                     return match.Value;
