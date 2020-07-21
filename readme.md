@@ -18,10 +18,10 @@ Reading an Element's ID will generate one if empty, so we can think of all Eleme
 
 ```c#  
 InputElement input = new InputElement(){ Value = "wazzaaaa" };  
-Console.WriteLine(input.RenderHTML());  
-LabelElement label = new LabelElement(){ For = input }; // set => Attribs["for"] = value.ID  
+Console.WriteLine(input.RenderHtml());  
+LabelElement label = new LabelElement(){ For = input }; // set => Attribs["for"] = value.Id  
 Console.WriteLine(label.Attribs["for"]);  
-Console.WriteLine(input.RenderHTML());  
+Console.WriteLine(input.RenderHtml());  
 // <input value="wazzaaaa">  
 // 92a73ac38  
 // <input value="wazzaaaa" id="92a73ac38">
