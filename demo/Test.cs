@@ -1,6 +1,5 @@
 using System;
 using System.Collections.Generic;
-using System.Collections.ObjectModel;
 using System.IO;
 using System.Linq;
 using Lantern.Face.Json;
@@ -28,7 +27,7 @@ namespace face.demo {
             catch (Exception e) {
                 List<string> messages = new List<string>();
                 while (true) {
-                    messages.Add(e.GetType().Name + "(" + e.Message.ToJson() + ")");
+                    messages.Add(e.GetType().Name + ": " + e.Message);
                     if (e.Message.Contains(expectMessageContains)) {
                         pass(desc, string.Join(" >> ", messages));
                         return;
@@ -81,6 +80,7 @@ namespace face.demo {
             ExpectException("Non-object ContainsKey exception", () => henry["age"].ContainsKey("turtles"), "as object");
             ExpectException("Can't read numeric key from JS Object", () => Console.WriteLine(jv[5].StringValue), "Can't read JS Object as array");
             ExpectException("Can't read string key from JS Array", () => Console.WriteLine(jv["doubles"]["two"].NumberValue), "Can't read JS Array as object");
+            ExpectException("Can't read keys from JS Array", () => Console.WriteLine(jv["doubles"].Keys), "Can't read JS Array as object");
             int[] ints = jv["ints"];
             Assert("Last int is 1", ints.Last() == 1);
             ExpectException("Can't cast number array with float to int[]", () => { ints = jv["doubles"]; }, "Lossy cast");
@@ -107,13 +107,16 @@ namespace face.demo {
             Assert("JsValue(5) != JsValue(2)", new JsValue(5) != new JsValue(2));
             Assert("JsValue(5) != JsValue(\"5\")", new JsValue(5) != new JsValue("5"));
             Assert("JsValue.ParseJson(\"5\") == 5f", JsValue.ParseJson("5") == 5f);
+            Assert("Parse \\u correctly", JsValue.ParseJson("\">\\u27564<\"") == ">❖4<");
             foreach (var (s, expectedMessage) in new (string, string)[] {
                 ("-", "Unexpected"),
+                ("[0,[1,4", "Past end"),
                 ("[0,[1,4,", "Past end"),
                 ("[0,[1,4,\"\\u\"]]", "Malformed"),
                 ("{\"hello wo", "Unclosed string"),
                 ("{\"hello\": world}", "Unexpected"),
                 ("[4, 5, 6}", "found '}'"),
+                ("{\"\\@\"", "Unknown escape")
             }) {
                 ExpectException("Can't parse " + s.ToJson(), () => JsValue.ParseJson(s), expectedMessage);
             }
@@ -121,12 +124,16 @@ namespace face.demo {
             string json;
             json = "-5.2"; Assert($"ParseJson({json.ToJson()}) == -5.2", JsValue.ParseJson(json) == -5.2);
             json = "null"; Assert($"ParseJson({json.ToJson()}) == null", JsValue.ParseJson(json) == null);
+            json = "1"; Assert($"ParseJson({json.ToJson()}) != null", JsValue.ParseJson(json) != null);
+            json = "null"; Assert($"ParseJson({json.ToJson()}) == JsValue.Null", JsValue.ParseJson(json) == JsValue.Null);
             json = "[[-5.4x]"; ExpectException("Identify position of invalid @ " + json.ToJson(), () => JsValue.ParseJson(json), "at input position 6");
+            json = "[\n[\n-5.4x]"; ExpectException("Identify line of invalid @ " + json.ToJson(), () => JsValue.ParseJson(json), "(line 3)");
             json = "[\"abc\\u9\"]"; ExpectException("Fail on malformed codepoint in " + json.ToJson(), () => JsValue.ParseJson(json), "Malformed \\u sequence");
             json = "[\"abc\\u98"; ExpectException("Fail on malformed codepoint in " + json.ToJson(), () => JsValue.ParseJson(json), "Malformed \\u sequence");
             json = "[\"abc\\u123x\"]"; ExpectException("Fail on malformed codepoint in " + json.ToJson(), () => JsValue.ParseJson(json), "Malformed \\u sequence");
             ExpectException("Exception parsing empty string", () => JsValue.ParseJson(""), "Past end");
             json = "["; ExpectException("Exception parsing " + json.ToJson(), () => JsValue.ParseJson(json), "Past end");
+            json = "null"; ExpectException($"Null reference from parse({json.ToJson()})[\"key\"]", () => Console.Write(JsValue.ParseJson(json)["BLM ✊🏿"].StringValue), "Object reference not set");
         }
         
     }

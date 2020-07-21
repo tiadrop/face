@@ -1,11 +1,9 @@
-using System.Threading;
 using System.Collections;
 using System.Threading.Tasks;
 using System;
 using System.Collections.Generic;
 using System.Text;
 using System.Linq;
-using Lantern.Face;
 
 namespace Lantern.Face.Parts.Html {
 
@@ -16,7 +14,7 @@ namespace Lantern.Face.Parts.Html {
 			set => Attribs["title"] = value;
 		}
 
-		public string ID {
+		public string Id {
 			get {
 				if(!Attribs.Keys.Contains("id")){
 					var bytes = new byte[16];
@@ -29,11 +27,8 @@ namespace Lantern.Face.Parts.Html {
 		}
 
 		private Random rnd = new Random();
-		private static string[] noClose = { "input", "br", "hr", "link", "base", "meta", "body" };
-		// we're dropping </body> because it's optional (by spec); nothing will follow it; omitting </html> for same
 		public Element.Attributes Attribs = new Element.Attributes();
-		private Element.DataAttributes _data; // set in constructor; requires (wraps) _attribs
-		private UniqueList<string> _booleanAttribs = new UniqueList<string>();
+		private readonly Element.DataAttributes _data; // set in constructor; requires (wraps) _attribs
 		public Element.ClassList _classes = new Element.ClassList();
 
 		public PartList<TChild> Content = new PartList<TChild>();
@@ -63,7 +58,7 @@ namespace Lantern.Face.Parts.Html {
 			}
 		}
 
-		private bool isNoClose => noClose.Contains(Tag);
+		private bool isNoClose => Element.noClose.Contains(Tag);
 		public readonly string Tag;
 		public Element(string tag){
 			this.Tag = tag;
@@ -79,19 +74,19 @@ namespace Lantern.Face.Parts.Html {
 			this.Content.Add(part);
 		}
 
-		public override async Task<string> RenderHTML() {
+		public override async Task<string> RenderHtml() {
 			StringBuilder s = new StringBuilder();
 			s.Append($"<{Tag}");
 			if(Classes.Count > 0){
 				s.Append(" class=\"");
-				s.Append(Classes.ToString());
+				s.Append(Classes);
 				s.Append("\"");
 			}
 			
-			if(Attribs.Keys.Count() > 0) s.Append($" {string.Join(" ", Attribs.Select(a => $"{a.Key.EscapeHTML()}=\"{a.Value.EscapeHTML()}\""))}");
-			if(BooleanAttribs.Count() > 0) s.Append(" " + string.Join(" ", BooleanAttribs));
+			if(Attribs.Keys.Any()) s.Append($" {string.Join(" ", Attribs.Select(a => $"{a.Key.EscapeHtml()}=\"{a.Value.EscapeHtml()}\""))}");
+			if(BooleanAttribs.Any()) s.Append(" " + string.Join(" ", BooleanAttribs));
 			s.Append(">");
-			s.Append(await Content.RenderHTML());
+			s.Append(await Content.RenderHtml());
 			if (isNoClose) return s.ToString();
 			s.Append("</" + Tag + ">");
 			return s.ToString();
@@ -103,6 +98,8 @@ namespace Lantern.Face.Parts.Html {
 
 
 	public abstract class Element : Element<Part> {
+		internal static readonly string[] noClose = { "input", "br", "hr", "link", "base", "meta", "body" };
+		// we're dropping </body> because it's optional (by spec); nothing will follow it; omitting </html> for same
 
 		public interface IAttributes : IEnumerable<KeyValuePair<string, string>> {
 			public string this[string key] { get; set; }

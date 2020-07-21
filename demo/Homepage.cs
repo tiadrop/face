@@ -5,19 +5,17 @@ using Lantern.Face.Parts.Html;
 using System.Threading.Tasks; 
 using Microsoft.AspNetCore.Http;
 using Lantern.FaceDemo;
-//using Lantern.Face.JSON;
-using System.Collections.Generic;
 
 class Homepage : Page {
 
 	public override Task Prepare(HttpContext context) {
 		Title = "Central";
 		Body.Classes.Add("homepage");
-		cssUrls.Add("/.Face.css");
-		jsUrls.Add("/.Face.js");
+		CssUrls.Add("/.Face.css");
+		JsUrls.Add("/.Face.js");
 
 		PartList parts = new PartList();
-		var uptime = Convert.ToInt64(System.Environment.TickCount64);
+		var uptime = Convert.ToInt64(Environment.TickCount64);
 		var currentTime = Convert.ToInt64(new DateTimeOffset(DateTime.UtcNow).ToUnixTimeMilliseconds());
 		var powerOnUnixTime = Convert.ToInt64(Math.Round(Convert.ToDouble(currentTime - uptime)) / 1000);
 
@@ -32,7 +30,7 @@ class Homepage : Page {
 						new LabelElement(){
 							Content = new PlainText("Device"),
 						},
-						System.Environment.MachineName
+						Environment.MachineName
 					},
 				},
 				new SectionElement{
@@ -63,20 +61,20 @@ class Homepage : Page {
 				},
 				new EventLog(){
 					Classes ="eventLog",
-					Content = new EventListItem[]{
+					Content = new []{
 
 						new EventListItem{
 							Label = "KNotify",
-							Content = new RawHTML("<b>Download complete:</b> Ainsley Harriot's Ultimate Reddy-Brek Recipies.pdf"),
+							Content = new RawHtml("<b>Download complete:</b> Ainsley Harriot's Ultimate Reddy-Brek Recipies.pdf"),
 						},
 						new EventListItem{
 							Label = "Authorised",
 							Classes = new[]{ "good" },
-							Content = new RawHTML("Your request for <em>skynet5 repository access</em> was accepted"),
+							Content = new RawHtml("Your request for <em>skynet5 repository access</em> was accepted"),
 						},
 						new EventListItem{
 							Label = "Message",
-							Content = new RawHTML("Received a <a href='converse/rickyg'>message</a> from <em>Ricky G</em>"),
+							Content = new RawHtml("Received a <a href='converse/rickyg'>message</a> from <em>Ricky G</em>"),
 						},
 						new EventListItem{
 							Label = "Project Y",
@@ -87,7 +85,7 @@ class Homepage : Page {
 							Label = "Incoming call",
 							Classes = new[]{ "priority" },
 							Content = new Part[] {
-								new RawHTML("<em>Johnny Ten</em>, unscheduled<br>"),
+								new RawHtml("<em>Johnny Ten</em>, unscheduled<br>"),
 								new DelegateButton{
 									OnClick = (context, post) => {
 										Console.WriteLine("Connecting call");

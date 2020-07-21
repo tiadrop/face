@@ -21,9 +21,9 @@ namespace Lantern.FaceDemo {
 			set => _rootDiv.Content = value;
 		}
 
-		public override async Task<string> RenderHTML() {
-			var s = await _header.RenderHTML();
-			foreach(var part in Content) s += await part.RenderHTML();
+		public override async Task<string> RenderHtml() {
+			var s = await _header.RenderHtml();
+			foreach(var part in Content) s += await part.RenderHtml();
 			return s;
 		}
 

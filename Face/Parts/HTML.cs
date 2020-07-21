@@ -182,7 +182,7 @@ namespace Lantern.Face.Parts.Html {
 
 	public class LabelElement : InteractiveElement {
 		public Element For {
-			set => Attribs["for"] = value.ID;
+			set => Attribs["for"] = value.Id;
 		}
 		public LabelElement() : base("label") {}
 	}

@@ -1,12 +1,12 @@
-using Lantern.Face;
 using System.Threading.Tasks;
+
 namespace Lantern.Face.Parts.Html {
-	class RawHTML : Part {
-		private string _s;
-		public RawHTML(string html) {
+	class RawHtml : Part {
+		private readonly string _s;
+		public RawHtml(string html) {
 			_s = html;
 		}
-		public override Task<string> RenderHTML() => Task.FromResult(_s);
+		public override Task<string> RenderHtml() => Task.FromResult(_s);
 	}
 
 }

@@ -5,7 +5,6 @@ using Microsoft.AspNetCore.Hosting;
 using Microsoft.Extensions.Hosting;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Builder;
-using Microsoft.AspNetCore.Routing;
 using Lantern.Face;
 using Lantern.Face.Parts;
 using Lantern.Face.Parts.Html;
@@ -54,12 +53,12 @@ namespace Lantern.FaceDemo {
 		public async Task Handle(HttpContext context) {
 			Page page = new ErrorPage(404);
 			await page.Prepare(context);
-			await context.Response.WriteAsync(await page.RenderHTML());
+			await context.Response.WriteAsync(await page.RenderHtml());
 		}
 
 		public static async Task Respond(HttpContext context, Page page){
 			await page.Prepare(context);
-			await context.Response.WriteAsync(await page.RenderHTML());
+			await context.Response.WriteAsync(await page.RenderHtml());
 		}
 
 		public delegate EventListItem GetEvent();
@@ -68,14 +67,14 @@ namespace Lantern.FaceDemo {
 			() => new EventListItem{ Label = "Authorised", Content = "Your request for skynet5 repository access was accepted"},
 			() => new EventListItem{
 				Label = "Message",
-				Content = new RawHTML("Received a <a href='converse/rickyg'>message</a> from <em>Ricky G</em>"),
+				Content = new RawHtml("Received a <a href='converse/rickyg'>message</a> from <em>Ricky G</em>"),
 			},
 			() => new EventListItem{ Label = "Project Y", Content = "The rabbit is in the hutch", Classes = "projectY"},
 			() => new EventListItem{
 				Label = "Incoming call",
 				Classes = new[]{ "priority" },
 				Content = new Part[] {
-					new RawHTML("<em>Johnny Ten</em>, unscheduled<br>"),
+					new RawHtml("<em>Johnny Ten</em>, unscheduled<br>"),
 					new DelegateButton{
 						OnClick = (context, post) => {
 							Console.WriteLine("Connecting call");
@@ -93,7 +92,7 @@ namespace Lantern.FaceDemo {
 			var rnd = new Random();
 			while(rnd.NextDouble() < .3){
 				var item = RandomEventFactoryPool[rnd.Next(RandomEventFactoryPool.Length)]();
-				await context.Response.WriteAsync(await item.RenderHTML());
+				await context.Response.WriteAsync(await item.RenderHtml());
 			}
 		}
 
@@ -107,7 +106,7 @@ namespace Lantern.FaceDemo {
 		public async Task HTTPError(HttpContext context, int code, string description) {
 			var page = new ErrorPage(code);
 			await page.Prepare(context);
-			await context.Response.WriteAsync(await page.RenderHTML());
+			await context.Response.WriteAsync(await page.RenderHtml());
 		}
 	}
 

@@ -3,6 +3,7 @@ using System;
 using System.Linq;
 using System.Text;
 using System.Collections.Generic;
+using System.Globalization;
 
 namespace Lantern.Face.Json {
 
@@ -10,7 +11,7 @@ namespace Lantern.Face.Json {
 		// primitives
 		public static string ToJson(this string s) => $"\"{s.Replace("\\", "\\\\").Replace("\"", "\\\"")}\"";
 		public static string ToJson(this int v) => v.ToString();
-		public static string ToJson(this double v) => v.ToString();
+		public static string ToJson(this double v) => v.ToString(CultureInfo.InvariantCulture);
 		public static string ToJson(this bool v) => v ? "true" : "false";
 
 		public static string ToJson(this IJsonEncodable obj) => obj.ToJsValue().ToJson();
@@ -21,7 +22,7 @@ namespace Lantern.Face.Json {
 		public static string ToJson(this IDictionary<string, JsValue> dict, int maxDepth = JsValue.DefaultMaxDepth){
 			var sb = new StringBuilder();
 			sb.Append("{");
-			var colonicPairings = dict.Keys.Select<string, string>(key => {
+			var colonicPairings = dict.Keys.Select(key => {
 				var value = dict[key];
 				var sb = new StringBuilder();
 				sb.Append(key.ToJson());
@@ -153,7 +154,7 @@ namespace Lantern.Face.Json {
 			get {
 				switch (DataType) {
 					case JsType.String: return _stringValue;
-					case JsType.Number: return _numberValue.ToString();
+					case JsType.Number: return _numberValue.ToString(CultureInfo.InvariantCulture);
 					case JsType.Boolean: return _booleanValue ? "True" : "False";
 				}
 				throw new InvalidCastException("Can't read JS " + DataType.ToString() + " as string");
@@ -177,23 +178,23 @@ namespace Lantern.Face.Json {
 					case JsType.Boolean: return _booleanValue;
 					case JsType.Null: return false;
 				}
-				throw new InvalidCastException("Can't read JS " + DataType.ToString() + " as boolean");
+				throw new InvalidCastException($"Can't read JS {DataType} as boolean");
 			}
 		}
 		public JsValue[] ArrayValue {
 			get {
-				if(DataType != JsType.Array) throw new InvalidCastException("Can't read JS " + DataType.ToString() + " as array");
+				if(IsNull) return null;
+				if(!IsArray) throw new InvalidCastException($"Can't read JS {DataType} as array");
 				return _arrayValue;
 			}
 		}
 		public ReadOnlyDictionary<string, JsValue> ObjectValue {
 			get {
-				if(DataType != JsType.Object) throw new InvalidCastException("Can't read JS " + DataType.ToString() + " as object");
+				if(IsNull) return null;
+				if(!IsObject) throw new InvalidCastException($"Can't read JS {DataType} as object");
 				return _objectValue;
 			}
 		}
-
-		public ReadOnlyDictionary<string, JsValue>.KeyCollection Keys => _objectValue.Keys;
 
 		private class JsNull { }
 		public static readonly JsValue Null = new JsValue(new JsNull());
@@ -213,9 +214,7 @@ namespace Lantern.Face.Json {
 		public static implicit operator JsValue(Dictionary<string, JsValue> properties) => new JsValue(properties);
 		public static implicit operator JsValue(IJsonEncodable[] arr) => arr == null ? null : new JsValue(arr.Select(item 
 			=> item.ToJsValue()).ToArray());
-		public static implicit operator JsValue(JsValue[] arr) {
-			return arr == null ? JsValue.Null : new JsValue(arr);
-		}
+		public static implicit operator JsValue(JsValue[] arr) => arr == null ? JsValue.Null : new JsValue(arr);
 		public static implicit operator JsValue(string[] v) => v.Select(m => new JsValue(m)).ToArray();
 		public static implicit operator JsValue(bool[] v) => v.Select(m => new JsValue(m)).ToArray();
 		public static implicit operator JsValue(int[] v) => v.Select(m => new JsValue(m)).ToArray();
@@ -276,6 +275,7 @@ namespace Lantern.Face.Json {
 		public JsValue this[string property] => ObjectValue[property];
 		public JsValue this[int index] => ArrayValue[index];
 
+		public ReadOnlyDictionary<string, JsValue>.KeyCollection Keys => ObjectValue.Keys;
 		public bool ContainsKey(string key) => ObjectValue.ContainsKey(key);
 		public bool Contains(JsValue value) => ArrayValue.Contains(value);
 		public int Count => ArrayValue.Length;
@@ -299,7 +299,7 @@ namespace Lantern.Face.Json {
 		}
 
 		/// <summary>
-		/// Creates a JSValue object from a JSON-formatted strong
+		/// Creates a JsValue object from a JSON-formatted strong
 		/// </summary>
 		/// <param name="json">A JSON-formatted string</param>
 		/// <returns>An object representing the data structure expressed in the input JSON string</returns>
@@ -321,8 +321,8 @@ namespace Lantern.Face.Json {
 					case JsType.Null:
 						obj = null;
 						break;
-					case JsType.Array: return object.ReferenceEquals(obj, this) || object.ReferenceEquals(obj, this._arrayValue);
-					case JsType.Object: return object.ReferenceEquals(obj, this) || object.ReferenceEquals(obj, _objectValue);					
+					case JsType.Array: return ReferenceEquals(obj, this) || ReferenceEquals(obj, this._arrayValue);
+					case JsType.Object: return ReferenceEquals(obj, this) || ReferenceEquals(obj, _objectValue);					
 				}
 			}
 			if (obj == null) return IsNull;
@@ -337,8 +337,15 @@ namespace Lantern.Face.Json {
 			return false;
 		}
 
-		public static bool operator ==(JsValue a, JsValue b) => a.Equals(b);
-		public static bool operator !=(JsValue a, JsValue b) => !a.Equals(b);
+		public static bool operator ==(JsValue a, JsValue b) {
+			if ((object)a == null) return (object)b == null;
+			return a.Equals(b);
+		}
+
+		public static bool operator !=(JsValue a, JsValue b) {
+			if ((object)a == null) return (object) b != null;
+			return !a.Equals(b);
+		}
 
 		public override int GetHashCode() {
 			return DataType switch {

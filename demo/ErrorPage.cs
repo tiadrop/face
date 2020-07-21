@@ -1,12 +1,9 @@
-using System.Net;
-using System.Linq;
-using System;
 using Lantern.Face.Parts.Html;
-using Lantern.Face.Parts;
 using Lantern.Face;
 using System.Collections.Generic;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Http;
+
 namespace Lantern.FaceDemo {
 
 	class ErrorPage : Page {
@@ -32,8 +29,8 @@ namespace Lantern.FaceDemo {
 		public override Task Prepare(HttpContext context) {
 			Title = "ERROR | Face";
 			Body.Classes.Add("errorPage");
-			cssUrls.Add("/.Face.css");
-			jsUrls.Add("/.Face.js");
+			CssUrls.Add("/.Face.css");
+			JsUrls.Add("/.Face.js");
 
 			PartList parts = new PartList{
 				new DivElement() {

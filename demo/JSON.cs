@@ -42,8 +42,8 @@ public static class JsonDemo {
 
 		Dictionary<string, JsValue> dictionary = new Dictionary<string, JsValue> {
 			["store_id"] = "C555",
-			["pending_user_accounts"] = new User[] { new User("Jedward"), new User("Hoagie"), },
-			["unread_notice_ids"] = new int[]{ 52, 111 },
+			["pending_user_accounts"] = new [] { new User("Jedward"), new User("Hoagie"), },
+			["unread_notice_ids"] = new []{ 52, 111 },
 		};
 		Console.WriteLine("[json demo] dictionary.ToJson(): " + dictionary.ToJson());
 

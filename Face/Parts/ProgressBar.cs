@@ -1,6 +1,6 @@
 using System.Threading.Tasks;
 using Lantern.Face.Parts.Html;
-using Lantern.Face.Parts;
+
 namespace Lantern.Face.Parts {
 	class ProgressBar : Part {
 
@@ -10,7 +10,7 @@ namespace Lantern.Face.Parts {
 			set => _position = value;
 		}
 
-		public async override Task<string> RenderHTML() {
+		public async override Task<string> RenderHtml() {
 			var outer = new DivElement() {
 				Classes = new[]{ "face-progressbar-out" }
 			};
@@ -20,7 +20,7 @@ namespace Lantern.Face.Parts {
 					["style"] = $"width:{_position * 100}%"
 				}
 			});
-			return await outer.RenderHTML();
+			return await outer.RenderHtml();
 		}
 	}
 }

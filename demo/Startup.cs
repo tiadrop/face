@@ -65,10 +65,10 @@ namespace Lantern.Face {
 					StreamReader reader = new StreamReader(context.Request.Body);
 					string body = await reader.ReadToEndAsync();
 					string[] ids = body.Split(',');
-					Lantern.Face.Parts.DelegateButton.Touch(ids);
+					Parts.DelegateButton.Touch(ids);
 				});
 				endpoints.MapPost(".Face/delegate/{guid}", async context => {
-					await Lantern.Face.Parts.DelegateButton.Fire((string)context.Request.RouteValues["guid"], context);
+					await Parts.DelegateButton.Fire((string)context.Request.RouteValues["guid"], context);
 				});
 
 				_app.ConfigureRouting(endpoints);

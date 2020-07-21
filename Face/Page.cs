@@ -1,6 +1,3 @@
-using System.Runtime.CompilerServices;
-using System.Reflection;
-using System.Net;
 using System;
 using System.Linq;
 using System.Threading.Tasks;
@@ -9,7 +6,6 @@ using System.Collections;
 using System.Collections.Generic;
 using Lantern.Face.Json;
 using Microsoft.AspNetCore.Http;
-using Lantern.Face.Parts;
 using Lantern.Face.Parts.Html;
 
 namespace Lantern.Face {
@@ -60,16 +56,15 @@ namespace Lantern.Face {
 	}
 
 	public abstract class Page {
-
-		public string Title = "";
-		protected UniqueList<string> cssUrls = new UniqueList<string>();
-		protected List<string> jsUrls = new List<string>();
+		protected string Title = "";
+		protected readonly UniqueList<string> CssUrls = new UniqueList<string>();
+		protected readonly List<string> JsUrls = new List<string>();
 
 		public virtual Task Prepare(HttpContext context) { return Task.CompletedTask; }
 
-		public readonly Element Body = new BodyElement();
+		protected readonly Element Body = new BodyElement();
 
-		public async Task<string> RenderHTML(){
+		public async Task<string> RenderHtml(){
 			var headSection = new OtherElement("head") {
 				Content = new Part[]{
 					new OtherElement("meta"){
@@ -89,7 +84,7 @@ namespace Lantern.Face {
 					}
 				}
 			};
-			foreach(var url in cssUrls) headSection.Append(new OtherElement("link") {
+			foreach(var url in CssUrls) headSection.Append(new OtherElement("link") {
 				Attribs = new Element.Attributes{
 					["rel"] = "stylesheet",
 					["type"] = "text/css",
@@ -98,21 +93,21 @@ namespace Lantern.Face {
 			});
 
 			string[] clientRequires = Body.GetClientRequires();
-			headSection.Append(new RawHTML(String.Join("", jsUrls.Select(url 
+			headSection.Append(new RawHtml(String.Join("", JsUrls.Select(url 
 				=> $"<script src=\"{url}\"></script>"
 			).ToArray())));
 			// todo: combine requires with jsUrls; hard insert <script .Face.js> if requires.length > 0
 			if(clientRequires.Length > 0){
 				headSection.Append(new OtherElement("script") {
-					Content = new RawHTML($"face.require({String.Join(",", clientRequires.Select(s => s.ToJson()))});setTimeout(face.apply,1)")
+					Content = new RawHtml($"face.require({String.Join(",", clientRequires.Select(s => s.ToJson()))});setTimeout(face.apply,1)")
 				});
 			}
 
 
 			var sb = new StringBuilder();
 			sb.Append("<!DOCTYPE html><html>");
-			sb.Append(await headSection.RenderHTML());
-			sb.Append(await Body.RenderHTML());
+			sb.Append(await headSection.RenderHtml());
+			sb.Append(await Body.RenderHtml());
 			var s = sb.ToString();
 			return s;
 		}

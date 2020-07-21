@@ -8,8 +8,8 @@ namespace Lantern.FaceDemo {
 	class OpsPage : Page {
 		public override Task Prepare(HttpContext context) {
 			Title = "Ops";
-			cssUrls.Add("/.Face.css");
-			jsUrls.Add("/.Face.js");
+			CssUrls.Add("/.Face.css");
+			JsUrls.Add("/.Face.js");
 
 			PartList parts = new PartList{
 				new HeadingElement(1) {

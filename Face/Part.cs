@@ -7,12 +7,12 @@ using Lantern.Face.Parts.Html;
 namespace Lantern.Face {
 
 	public abstract class Part {
-		public abstract Task<string> RenderHTML();
+		public abstract Task<string> RenderHtml();
 		public virtual string[] GetClientRequires() => new string[] { };
 
 		public static implicit operator Part(string s) => new PlainText(s);
 
-		public virtual string RenderJSON() {
+		public virtual string RenderJson() {
 			throw new NotImplementedException();
 		}
 	}
@@ -21,8 +21,8 @@ namespace Lantern.Face {
 		public PartList(IEnumerable<T> parts = null) {
 			if (parts != null) this.AddRange(parts);
 		}
-		public async Task<string> RenderHTML() {
-			var renderTasks = this.Select(part => part.RenderHTML());
+		public async Task<string> RenderHtml() {
+			var renderTasks = this.Select(part => part.RenderHtml());
 			// nested parallel async rendering feels nice
 			var strings = await Task.WhenAll(renderTasks);
 			return string.Join("", strings);

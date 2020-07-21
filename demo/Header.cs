@@ -34,8 +34,8 @@ namespace Lantern.FaceDemo {
 			};
 		}
 
-		public override async Task<string> RenderHTML() {
-			return await nav.RenderHTML();
+		public override async Task<string> RenderHtml() {
+			return await nav.RenderHtml();
 		}
 
 		public string ActiveHRef {
