@@ -54,10 +54,13 @@ namespace Lantern.Face.Json {
             if (relaxed && position < input.Length - 1 && current == '/' && input[position + 1] == '/') { // skip comment if relaxed
                 var nextLine = crLfRegex.Match(input, position);
                 if (nextLine.Success) {
-                    position = nextLine.Index;
+                    position = nextLine.Index - 1;
                     NextToken(expectEot);
                 }
-                else position = input.Length;
+                else {
+                    position = input.Length - 1;
+                    NextToken(expectEot);
+                }
             }
             if(expectEot && position < input.Length) throw new ParseError($"Unexpected '{current}' at input position {position}");
         }
@@ -247,7 +250,10 @@ namespace Lantern.Face.Json {
             var startPosition = position;
             var result = new Dictionary<string, JsValue>();
             while (true) {
-                NextToken();
+                try { NextToken(); }
+                catch (ParseError e) {
+                    throw new ParseError($"Failed to parse property name #{result.Count} in object starting at input position {appendLineNumber(startPosition)}", e);
+                }
                 if (current == '}') return result;
                 if (!relaxed && current != '"')
                     throw new ParseError(
@@ -261,11 +267,19 @@ namespace Lantern.Face.Json {
                         $"Failed to parse property name #{result.Count} in object starting at input position {appendLineNumber(startPosition)}", e);
                 }
 
-                NextToken();
+                try { NextToken(); }
+                catch (ParseError e) {
+                    throw new ParseError($"Expected ':' following property name '{shortenKey(keyValue)}' in object starting at input position {appendLineNumber(startPosition)}", e);
+                }
                 if (current != ':')
                     throw new ParseError(
-                        $"Expected ':' for property #{result.Count} {shortenKey(keyValue).ToJson()} in object starting at input position {appendLineNumber(startPosition)}, found '{current}' at input position {positionWithLine}");
-                NextToken();
+                        $"Expected ':' following property name '{shortenKey(keyValue).ToJson()}' in object starting at input position {appendLineNumber(startPosition)}, found '{current}' at input position {positionWithLine}");
+
+                try { NextToken(); }
+                catch (ParseError e) {
+                    throw new ParseError($"Expected value for property '{shortenKey(keyValue)}' in object starting at input position {appendLineNumber(startPosition)}", e);
+                }
+                
                 JsValue value;
                 try {
                     value = readValue();
@@ -275,7 +289,10 @@ namespace Lantern.Face.Json {
                 }
 
                 result[keyValue] = value;
-                NextToken();
+                try { NextToken(); }
+                catch (ParseError e) {
+                    throw new ParseError($"Expected ',' or '{'}'}' following value for property '{shortenKey(keyValue)}' in object starting at input position {appendLineNumber(startPosition)}", e);
+                }
                 if (current == '}') return result;
                 if (current != ',')
                     throw new ParseError(
