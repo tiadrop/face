@@ -1,6 +1,6 @@
 using System;
 using System.Collections.Generic;
-using System.Linq;
+using System.Runtime.CompilerServices;
 using System.Text;
 using System.Text.RegularExpressions;
 
@@ -16,9 +16,11 @@ namespace Lantern.Face.Json {
         private readonly string input;
         private int position = -1;
         private static readonly char[] whiteSpaceChars = new char[] { '\r', '\n', '\t', ' ' };
+        private int length;
 
         private Parser(string s, bool relaxed = false) {
             input = s;
+            length = s.Length;
             this.relaxed = relaxed;
         }
 
@@ -43,26 +45,28 @@ namespace Lantern.Face.Json {
         /// </summary>
         /// <param name="expectEot">True to throw an exception if a symbol is found</param>
         /// <exception cref="ParseError"></exception>
-        private void NextToken(bool expectEot = false){
+        [MethodImpl(MethodImplOptions.AggressiveOptimization)]
+        private void NextToken(in bool expectEot = false){
             position++;
-            if (!expectEot && position >= input.Length) throw new ParseError("Past end of input");
-            while(position < input.Length && whiteSpaceChars.Contains(current)){
+            if (!expectEot && position >= length) throw new ParseError("Past end of input");
+            // skip past whitespace
+            while(position < length && (current == ' ' || current == '\r' || current == '\t' || current == '\n')){
                 position++;
-                if(!expectEot && position >= input.Length) throw new ParseError("Past end of input");
+                if(!expectEot && position >= length) throw new ParseError("Past end of input");
             }
 
-            if (relaxed && position < input.Length - 1 && current == '/' && input[position + 1] == '/') { // skip comment if relaxed
+            if (relaxed && position < length - 1 && current == '/' && input[position + 1] == '/') { // skip comment if relaxed
                 var nextLine = crLfRegex.Match(input, position);
                 if (nextLine.Success) {
                     position = nextLine.Index - 1;
                     NextToken(expectEot);
                 }
                 else {
-                    position = input.Length - 1;
+                    position = length - 1;
                     NextToken(expectEot);
                 }
             }
-            if(expectEot && position < input.Length) throw new ParseError($"Unexpected '{current}' at input position {position}");
+            if(expectEot && position < length) throw new ParseError($"Unexpected '{current}' at input position {position}");
         }
 
         /// <summary>
@@ -83,41 +87,75 @@ namespace Lantern.Face.Json {
         /// </summary>
         private string positionWithLine => appendLineNumber(position);
 
-        private static readonly Regex numberMatchRegex = new Regex("\\G-?\\d*\\.?\\d+");
-
         /// <summary>
         /// Reads a value from input and places the read position at the end.
         /// </summary>
         /// <returns>The value read from input</returns>
         /// <exception cref="ParseError"></exception>
         private JsValue readValue() {
-            if (current == '"') return readString();
-            if (current == '[') return readArray();
-            if (current == '{') return readObject();
-            if (input.Length - position >= 4 && input.Substring(position, 4) == "null") {
-                position += 3;
-                return JsValue.Null;
+            switch (current) {
+                case '"': return readString();
+                case '[': return readArray();
+                case '{': return readObject();
             }
 
-            if (input.Length - position >= 4 && input.Substring(position, 4) == "true") {
-                position += 3;
-                return true;
-            }
+            if (numberMatch(true)) return readNumber();
 
-            if (input.Length - position >= 5 && input.Substring(position, 5) == "false") {
-                position += 4;
-                return false;
-            }
-
-            var numberMatch = numberMatchRegex.Match(input, position);
-            if (numberMatch.Success) {
-                string cap = numberMatch.Captures[0].Value;
-                double num = Convert.ToDouble(cap);
-                position += numberMatch.Captures[0].Length - 1;
-                return num;
+            if (length - position >= 4 && (current == 't' || current == 'f' || current == 'n')) {
+                string nextFour = input.Substring(position, 4);
+                switch (nextFour) {
+                    case "null":
+                        position += 3;
+                        return JsValue.Null;
+                    case "true":
+                        position += 3;
+                        return true;
+                    case "fals" when length - position >= 5 && input[position + 4] == 'e':
+                        position += 4;
+                        return false;
+                }
             }
 
             throw new ParseError($"Unexpected '{current}' at input position {positionWithLine}");
+        }
+
+        private double readNumber() {
+            int lengthFound = 1;
+            position++;
+            while (position < length && numberMatch(false)) {
+                position++;
+                lengthFound++;
+            }
+            position -= 1;
+
+            floatingPointFound = false;
+            string numberString = input.Substring(position + 1 - lengthFound, lengthFound);
+            try {
+                return double.Parse(numberString);
+            }
+            catch (Exception e) {
+                throw new ParseError($"Failed to parse number at input position {appendLineNumber(position + 1 - lengthFound)}", e);
+            }
+        }
+
+        private bool floatingPointFound = false;
+        /// <summary>
+        /// Ascertains whether the the current character is numeric. '.' is considered numeric on first encounter after setting floatingPointFound = false.
+        /// </summary>
+        /// <param name="allowMinus">Defines whether to accept "-" as numeric, i.e. if we are expecting the first character of the numeric value</param>
+        /// <returns>True if the symbol at current position is numeric</returns>
+        private bool numberMatch(bool allowMinus) {
+            switch (current) {
+                case '-': return allowMinus;
+                case '.':
+                    if(floatingPointFound) return false;
+                    floatingPointFound = true;
+                    return true;
+                case '0': case '1': case '2': case '3': case '4':
+                case '5': case '6': case '7': case '8': case '9':
+                    return true;
+            }
+            return false;
         }
 
         private static readonly Regex escapedCodePointRegex = new Regex("\\G[0-9a-f]{4}");
@@ -141,6 +179,7 @@ namespace Lantern.Face.Json {
         /// </summary>
         /// <returns></returns>
         /// <exception cref="ParseError"></exception>
+        [MethodImpl(MethodImplOptions.AggressiveOptimization)]
         private string readString(){
             bool escaping = false;
             if (relaxed && current != '"') {
@@ -153,7 +192,7 @@ namespace Lantern.Face.Json {
             var startPosition = position;
             position++; // skip first "
             var sb = new StringBuilder();
-            if(position >= input.Length) throw new ParseError($"Unclosed string at input position {appendLineNumber(startPosition)}");
+            if(position >= length) throw new ParseError($"Unclosed string at input position {appendLineNumber(startPosition)}");
             while(escaping || current != '"'){
                 if(escaping){
                     escaping = false;
@@ -187,14 +226,14 @@ namespace Lantern.Face.Json {
                     }
 
                     position++; 
-                    if(position >= input.Length) throw new ParseError($"Unclosed string at input position {appendLineNumber(startPosition)}");
+                    if(position >= length) throw new ParseError($"Unclosed string at input position {appendLineNumber(startPosition)}");
                     continue;
                 }
                 if(current == '\\'){
                     escaping = true;
                 } else sb.Append(current);
                 position++;
-                if(position >= input.Length) throw new ParseError($"Unclosed string at input position {appendLineNumber(startPosition)}");
+                if(position >= length) throw new ParseError($"Unclosed string at input position {appendLineNumber(startPosition)}");
             }
             return sb.ToString();
         }

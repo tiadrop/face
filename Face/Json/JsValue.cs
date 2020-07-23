@@ -9,7 +9,13 @@ namespace Lantern.Face.Json {
 
 	public static class Extensions {
 		// primitives
-		public static string ToJson(this string s) => $"\"{s.Replace("\\", "\\\\").Replace("\"", "\\\"")}\"";
+		public static string ToJson(this string s) => "\"" + s
+			.Replace("\\", "\\\\")
+			.Replace("\"", "\\\"")
+			.Replace("\r", "\\r")
+			.Replace("\n", "\\n")
+			.Replace("\t", "\\t")
+			+ "\"";
 		public static string ToJson(this int v) => v.ToString();
 		public static string ToJson(this double v) => v.ToString(CultureInfo.InvariantCulture);
 		public static string ToJson(this bool v) => v ? "true" : "false";
@@ -68,11 +74,14 @@ namespace Lantern.Face.Json {
 
 	}
 
+	/// <summary>
+	/// Implement to allow implicit and explicit casting to JsValue. Confers a ToJson() extension method.
+	/// </summary>
 	public interface IJsonEncodable {
 		/// <summary>
-		/// Express the object as a JSValue to enable implicit and explicit JSON encoding
+		/// Express the object as a JsValue
 		/// </summary>
-		/// <returns>A JSValue representing this object</returns>
+		/// <returns>A JsValue representing this object</returns>
 		JsValue ToJsValue();
 	}
 
@@ -149,6 +158,17 @@ namespace Lantern.Face.Json {
 			_objectValue = new ReadOnlyDictionary<string, JsValue>(properties);
 		}
 
+		public JsValue(IEnumerable<(string, JsValue)> keyValuePairs) {
+			DataType = JsType.Object;
+			var kvpArray = keyValuePairs.Select(pair => new KeyValuePair<string, JsValue>(pair.Item1, pair.Item2));
+			var dict = new Dictionary<string, JsValue>(kvpArray);
+			_objectValue = new ReadOnlyDictionary<string, JsValue>(dict);
+		}
+
+		public JsValue(IEnumerable<KeyValuePair<string, JsValue>> source) {
+			DataType = JsType.Object;
+			_objectValue = new ReadOnlyDictionary<string, JsValue>(new Dictionary<string, JsValue>(source));
+		}
 
 		public string StringValue {
 			get {
@@ -183,18 +203,21 @@ namespace Lantern.Face.Json {
 		}
 		public JsValue[] ArrayValue {
 			get {
+				if (IsArray) return _arrayValue;
 				if(IsNull) return null;
-				if(!IsArray) throw new InvalidCastException($"Can't read JS {DataType} as array");
-				return _arrayValue;
+				throw new InvalidCastException($"Can't read JS {DataType} as array");
 			}
 		}
 		public ReadOnlyDictionary<string, JsValue> ObjectValue {
 			get {
+				if (IsObject) return _objectValue;
 				if(IsNull) return null;
-				if(!IsObject) throw new InvalidCastException($"Can't read JS {DataType} as object");
-				return _objectValue;
+				throw new InvalidCastException($"Can't read JS {DataType} as object");
 			}
 		}
+
+		public JsValue PropertyValueOr(string propertyName, JsValue defaultValue) 
+			=> ContainsKey(propertyName) ? this[propertyName] : defaultValue;
 
 		private class JsNull { }
 		public static readonly JsValue Null = new JsValue(new JsNull());
@@ -219,6 +242,7 @@ namespace Lantern.Face.Json {
 		public static implicit operator JsValue(bool[] v) => v.Select(m => new JsValue(m)).ToArray();
 		public static implicit operator JsValue(int[] v) => v.Select(m => new JsValue(m)).ToArray();
 		public static implicit operator JsValue(double[] v) => v.Select(m => new JsValue(m)).ToArray();
+		public static implicit operator JsValue((string, JsValue)[] pairs) => new JsValue(pairs);
 
 		// JS -> native
 		public static implicit operator string(JsValue j){
