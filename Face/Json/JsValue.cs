@@ -250,7 +250,7 @@ namespace Lantern.Face.Json {
 			return j.StringValue;
 		}
 		public static implicit operator double(JsValue j) {
-			if(j.IsString) return ParseJson(j.StringValue).NumberValue;
+			if(j.IsString) return FromJson(j.StringValue).NumberValue;
 			if (!j.IsNumber) throw new InvalidCastException("Implicitly casting JS " + j.DataType.ToString() + " to double is not allowed; consider jsValue.NumberValue");
 			return j.NumberValue;
 		}
@@ -328,7 +328,7 @@ namespace Lantern.Face.Json {
 		/// <param name="json">JSON-formatted string</param>
 		/// <param name="relaxed">True to allow // comments and unquoted property names</param>
 		/// <returns>Object representing the structure defined in JSON</returns>
-		public static JsValue ParseJson(string json, bool relaxed = false) => Parser.Parse(json, relaxed);
+		public static JsValue FromJson(string json, bool relaxed = false) => Parser.Parse(json, relaxed);
 
 		public override bool Equals(object obj) {
 			if(obj is JsValue jv){

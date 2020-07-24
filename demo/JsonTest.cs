@@ -50,7 +50,7 @@ namespace face.demo {
         }
 
         public static void Run() {
-            Console.WriteLine("Face: Lantern.Face.Json.JsValue.ParseJson(json)");
+            Console.WriteLine("Face: Lantern.Face.Json.JsValue.FromJson(json)");
             Console.WriteLine("Newtonsoft: Newtonsoft.Json.JsonConvert.DeserializeObject<object>(json)");
             Console.WriteLine("Utf8Json: Utf8Json.JsonSerializer.Deserialize<object>(json)");
             Console.WriteLine(
@@ -91,7 +91,7 @@ namespace face.demo {
             Benchmark("System.Text", iters, () => System.Text.Json.JsonSerializer.Deserialize<object>(json, new JsonSerializerOptions() {
                 AllowTrailingCommas = true
             }));
-            Benchmark("** Face", iters, () => JsValue.ParseJson(json));
+            Benchmark("** Face", iters, () => JsValue.FromJson(json));
             Benchmark("Newtonsoft", iters, () => Newtonsoft.Json.JsonConvert.DeserializeObject<object>(json));
             Console.WriteLine();
         }
@@ -141,7 +141,7 @@ namespace face.demo {
                 var expectFailure = basename[0] == 'n';
                 Console.WriteLine($"Parsing {basename}");
                 try {
-                    JsValue.ParseJson(content);
+                    JsValue.FromJson(content);
                 } catch (Exception e) {
                     if (expectSuccess) {
                         Console.WriteLine("** FAILED ** - " + basename + " - " + e.Message);

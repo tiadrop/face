@@ -151,7 +151,7 @@ namespace Lantern.Face.Parts {
 			try {
 				ReadOnlyDictionary<string, JsValue> formData = body.Length == 0
 					? new ReadOnlyDictionary<string, JsValue>(new Dictionary<string, JsValue>())
-					: JsValue.ParseJson(body);
+					: JsValue.FromJson(body);
 				await entry.Button._delegate(context, formData);
 			} catch (ParseError) { } // ignore malformed body
 		}

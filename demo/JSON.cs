@@ -26,7 +26,7 @@ public class User : IJsonEncodable {
 public static class JsonDemo {
 	public static void Run(){
 		string json = File.ReadAllText("jsontest");
-		JsValue jsobj = JsValue.ParseJson(json);
+		JsValue jsobj = JsValue.FromJson(json);
 		Console.WriteLine("[json demo] First key of object.hello[6]: " + jsobj["hello"][6].Keys.First());
 
 		User[] users = jsobj["hello"][6]["users"].ArrayValue

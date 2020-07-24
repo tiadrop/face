@@ -111,7 +111,7 @@ namespace Lantern.Face.Json {
             if (numberMatch(true)) return readNumber();
 
             if (length - position >= 4 && (c == 't' || c == 'f' || c == 'n')) {
-                string nextFour = input.Substring(position, 4);
+                string nextFour = input[position .. (position + 4)]; // (position, 4);
                 switch (nextFour) {
                     case "null":
                         position += 3;
@@ -245,7 +245,7 @@ namespace Lantern.Face.Json {
                 } else if(c == '\\'){
                     escaping = true;
                     if (literalLength > 0) {
-                        sb.Append(input[(position - literalLength) .. position]);
+                        sb.Append(input, position - literalLength, literalLength);
                         literalLength = 0;
                     }
                 } else literalLength++;
@@ -254,7 +254,7 @@ namespace Lantern.Face.Json {
                 if(position >= length) throw new ParseError($"Unclosed string at input position {appendLineNumber(startPosition)}");
             }
 
-            if(literalLength > 0) sb.Append(input[(position - literalLength) .. position]);
+            if(literalLength > 0) sb.Append(input, position - literalLength, literalLength);
             return sb.ToString();
         }
         
