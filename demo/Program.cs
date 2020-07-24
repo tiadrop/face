@@ -1,6 +1,7 @@
 using System.IO;
 using System;
 using System.Threading.Tasks;
+using face.demo;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.Extensions.Hosting;
 using Microsoft.AspNetCore.Http;
@@ -113,8 +114,10 @@ namespace Lantern.FaceDemo {
 
 	public class Program {
 		public static void Main(string[] args) {
+			// uncomment as wanted
+			JsonTest.Run();
 			JsonDemo.Run();
-			Server.Start();
+			//Server.Start();
 		}
 	}
 }

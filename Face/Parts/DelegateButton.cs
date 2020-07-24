@@ -12,12 +12,13 @@ using Lantern.Face.Json;
 namespace Lantern.Face.Parts {
 	public class DelegateButton : ButtonElement {
 
-		public DelegateButton(){
-			Attribs["type"] = "button";
-		}
-
 		// experimental. probably not thread-safe and frankly i don't know how to fix it
 		// also a potential ddos vector
+		public static bool UnderstoodWarning = false; 
+		public DelegateButton(){
+			if(!UnderstoodWarning) Console.WriteLine("Face.Parts.DelegateButton is experimental and unstable and should not be used in its current form. Set DelegateButton.UnderstoodWarning = true to suppress this message.");
+			Attribs["type"] = "button";
+		}
 
 		// delegates are passed the http context that notified us of the button click
 		public delegate Task Delegate(HttpContext context, ReadOnlyDictionary<string, JsValue> formData);
