@@ -4,6 +4,12 @@
   {
     filename: "appsettings.json",
     iterations: 40000,
+    remark: "appsettings.json"
+  },
+  {
+    filename: "demo/testjson/fail.json",
+    iterations: 1,
+    remark: "failure expected"
   },
   {
     filename: "demo/testjson/onestring.json",

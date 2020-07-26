@@ -125,6 +125,11 @@
     </Content>
     <Content Remove="demo\enormous.json" />
     <Content Remove="demo\huge.json" />
+    <Content Update="demo\testjson\fail.json">
+      <ExcludeFromSingleFile>true</ExcludeFromSingleFile>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      <CopyToPublishDirectory>PreserveNewest</CopyToPublishDirectory>
+    </Content>
   </ItemGroup>
   <ItemGroup>
     <PackageReference Include="Newtonsoft.Json" Version="12.0.3" />

@@ -125,6 +125,7 @@ namespace Lantern.Face.Json {
                         position += 4;
                         return false;
                 }
+                throw new ParseError($"Unexpected token at input position {positionWithLine}");
             }
 
             throw new ParseError($"Unexpected '{current}' at input position {positionWithLine}");
@@ -183,7 +184,7 @@ namespace Lantern.Face.Json {
                 return char.ConvertFromUtf32(
                     int.Parse(sequenceMatch.Value, System.Globalization.NumberStyles.HexNumber));
             }
-            catch (System.ArgumentOutOfRangeException e) {
+            catch (ArgumentOutOfRangeException e) {
                 throw new ParseError($"Failed to parse \\u sequence at input position {positionWithLine}", e);
             }
         }
@@ -292,8 +293,7 @@ namespace Lantern.Face.Json {
                     }
                     throw new ParseError($"Expected ',' or ']', found '{c}' at input position {positionWithLine}");
                 }
-            }
-            catch (ParseError e) {
+            } catch (ParseError e) {
                 throw new ParseError($"Failed to parse item #{found.Count} in array starting at input position {appendLineNumber(startPosition)}", e);
             }
         }

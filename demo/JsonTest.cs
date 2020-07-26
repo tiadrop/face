@@ -8,68 +8,36 @@ using Lantern.Face.Json;
 
 namespace face.demo {
     public static class JsonTest {
-
-        private static void fail(string desc, string reason) {
-            Console.WriteLine("FAILED: " + desc);
-            Console.WriteLine("- " + reason);
-        }
-
-        private static void pass(string desc, string info = "") {
-            if (info == "") {
-                Console.WriteLine("pass: " + desc);
+        public static string UnpackException(Exception e) {
+            string result = $"{e.GetType().Name}: {e.Message}";
+            while (e.InnerException != null) {
+                e = e.InnerException;
+                result += " --> " + $"{e.GetType().Name}: {e.Message}";
             }
-            else {
-                Console.WriteLine("pass: " + desc + " -- " + info);
-            }
-        }
-        public static void ExpectException(string desc, Action fn, string expectMessageContains) {
-            try {
-                fn();
-            }
-            catch (Exception e) {
-                List<string> messages = new List<string>();
-                while (true) {
-                    messages.Add(e.GetType().Name + ": " + e.Message);
-                    if (e.Message.Contains(expectMessageContains)) {
-                        pass(desc, string.Join(" >> ", messages));
-                        return;
-                    }
-                    e = e.InnerException;
-                    if (e == null) break;
-                }
-                
-                fail(desc, "Unexpected exception: " + string.Join(" >> ", messages));
-                return;
-            }
-            fail(desc, "No exception thrown");
-        }
-
-        public static void Assert(string desc, bool a) {
-            if (a) pass(desc);
-            else fail(desc, "assertion failed");
+            return result;
         }
 
         public static void Run() {
-            Console.WriteLine("Face: Lantern.Face.Json.JsValue.FromJson(json)");
-            Console.WriteLine("Newtonsoft: Newtonsoft.Json.JsonConvert.DeserializeObject<object>(json)");
             Console.WriteLine("Utf8Json: Utf8Json.JsonSerializer.Deserialize<object>(json)");
             Console.WriteLine(
                 "System.Text: System.Text.Json.JsonSerializer.Deserialize<object>(json, {...AllowTrailingCommas})");
+            Console.WriteLine("Face: Lantern.Face.Json.JsValue.FromJson(json)");
+            //Console.WriteLine("Newtonsoft: Newtonsoft.Json.JsonConvert.DeserializeObject<object>(json)");
+            Console.WriteLine("Score is iterations/time");
             Console.WriteLine();
 
             var tests = JsValue.FromJson(File.ReadAllText("demo/testidx.json"), true).ArrayValue;
             foreach (var test in tests) {
-                BenchmarkAll(test["filename"], test["iterations"], test.ContainsKey("remark") ? test["remark"].StringValue : "");
+                string json = test.ContainsKey("json") ? (string)test["json"] : File.ReadAllText(test["filename"]); 
+                BenchmarkAll(json, test["iterations"], test.ContainsKey("remark") ? test["remark"].StringValue : "");
             }
 
-            //BenchmarkAll("demo/big.json", 5);
-            //BenchmarkAll("demo/huge.json", 4);
-            //BenchmarkAll("demo/enormous.json", 1);
+            //BenchmarkAll(File.ReadAllText("demo/big.json"), 5);
+            //BenchmarkAll(File.ReadAllText("demo/huge.json"), 4);
+            //BenchmarkAll(File.ReadAllText("demo/enormous.json"), 1);
         }
 
-        private static void BenchmarkAll(string file, int iters, string remark = "") {
-            string json = File.ReadAllText(file);
-
+        private static void BenchmarkAll(string json, int iters, string remark = "") {
             double lengthInMb = (double)json.Length / (1024f * 1024f);
             double lengthInKb = (double)json.Length / 1024f;
 
@@ -98,9 +66,8 @@ namespace face.demo {
                 for (var i = 0; i < iterations; i++) {
                     test();
                 }
-            }
-            catch (Exception e) {
-                Console.WriteLine($"{title}: {e.GetType()}: {e.Message}");
+            } catch (Exception e) {
+                Console.WriteLine($"{title}: {UnpackException(e)}");
                 return;
             }
 
@@ -116,7 +83,6 @@ namespace face.demo {
                     Console.WriteLine($"{title}: {iterations / (timeInMs * 1000):F}/mcs");
                 }
             }
-            
         }
         
          /// <summary>
@@ -158,7 +124,45 @@ namespace face.demo {
             }
 
         }
-    
+ 
+         
+         private static void fail(string desc, string reason) {
+             Console.WriteLine("FAILED: " + desc);
+             Console.WriteLine("- " + reason);
+         }
 
+         private static void pass(string desc, string info = "") {
+             if (info == "") {
+                 Console.WriteLine("pass: " + desc);
+             } else {
+                 Console.WriteLine("pass: " + desc + " -- " + info);
+             }
+         }
+         public static void ExpectException(string desc, Action fn, string expectMessageContains) {
+             try {
+                 fn();
+             } catch (Exception e) {
+                 List<string> messages = new List<string>();
+                 while (true) {
+                     messages.Add(e.GetType().Name + ": " + e.Message);
+                     if (e.Message.Contains(expectMessageContains)) {
+                         pass(desc, string.Join(" >> ", messages));
+                         return;
+                     }
+                     e = e.InnerException;
+                     if (e == null) break;
+                 }
+                
+                 fail(desc, "Unexpected exception: " + string.Join(" >> ", messages));
+                 return;
+             }
+             fail(desc, "No exception thrown");
+         }
+
+         public static void Assert(string desc, bool a) {
+             if (a) pass(desc);
+             else fail(desc, "assertion failed");
+         }
+         
     }
 }

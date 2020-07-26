@@ -103,15 +103,19 @@ namespace Lantern.Face.Json {
 				throw new InvalidCastException("Can't read JS " + DataType.ToString() + " as number");
 			}
 		}
+		
+		/// <summary>
+		/// Reads the JsValue as a boolean.
+		/// </summary>
 		public bool BooleanValue {
 			get {
-				switch (DataType) {
-					case Type.String: return Convert.ToBoolean(_stringValue);
-					case Type.Number: return _numberValue != 0;
-					case Type.Boolean: return _booleanValue;
-					case Type.Null: return false;
-				}
-				throw new InvalidCastException($"Can't read JS {DataType} as boolean");
+				return DataType switch {
+					Type.String => Convert.ToBoolean(_stringValue),
+					Type.Number => _numberValue != 0,
+					Type.Boolean => _booleanValue,
+					Type.Null => false,
+					_ => throw new InvalidCastException($"Can't read JS {DataType} as boolean")
+				};
 			}
 		}
 		public JsValue[] ArrayValue {
