@@ -57,19 +57,13 @@ namespace face.demo {
                 "System.Text: System.Text.Json.JsonSerializer.Deserialize<object>(json, {...AllowTrailingCommas})");
             Console.WriteLine();
 
-            BenchmarkAll("appsettings.json", 4000, "appsettings.json");
-            BenchmarkAll("demo/testjson/onestring.json", 4000, "one long string");
-            BenchmarkAll("demo/testjson/manystrings.json", 1000, "many short strings");
-            BenchmarkAll("demo/testjson/justnums.json", 500, "flat int array");
-            BenchmarkAll("demo/testjson/arrays.json", 700, "array of empty arrays");
-            BenchmarkAll("demo/testjson/objects.json", 500, "array of empty objects");
-            BenchmarkAll("demo/testjson/objects2.json", 500, "array of small objects");
-            BenchmarkAll("demo/testjson/whitespace.json", 20000, "much whitespace");
-            BenchmarkAll("demo/testjson/mixed.json", 4000, "flat array of mixed types");
-            BenchmarkAll("demo/testjson/test-notc.json", 8000, "generic data");
-            BenchmarkAll("demo/testjson/test.json", 8000, "generic data, trailing commas");
-            //BenchmarkAll("demo/big.json", 500);
-            //BenchmarkAll("demo/huge.json", 3);
+            var tests = JsValue.FromJson(File.ReadAllText("demo/testidx.json"), true).ArrayValue;
+            foreach (var test in tests) {
+                BenchmarkAll(test["filename"], test["iterations"], test.ContainsKey("remark") ? test["remark"].StringValue : "");
+            }
+
+            //BenchmarkAll("demo/big.json", 5);
+            //BenchmarkAll("demo/huge.json", 4);
             //BenchmarkAll("demo/enormous.json", 1);
         }
 
@@ -82,8 +76,7 @@ namespace face.demo {
             if (remark != "") remark = $" ({remark})";
             if (lengthInMb > 1) {
                 Console.WriteLine($"*** {lengthInMb:F}mb{remark} x {iters} iterations:");
-            }
-            else {
+            } else {
                 Console.WriteLine($"*** {lengthInKb:F}kb{remark} x {iters} iterations:");
             }
             
@@ -92,7 +85,7 @@ namespace face.demo {
                 AllowTrailingCommas = true
             }));
             Benchmark("** Face", iters, () => JsValue.FromJson(json));
-            Benchmark("Newtonsoft", iters, () => Newtonsoft.Json.JsonConvert.DeserializeObject<object>(json));
+            //Benchmark("Newtonsoft", iters, () => Newtonsoft.Json.JsonConvert.DeserializeObject<object>(json));
             Console.WriteLine();
         }
         

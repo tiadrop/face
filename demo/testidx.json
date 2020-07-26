@@ -1,0 +1,63 @@
+// this file is read with the relaxed parameter set to true
+// so comments and unquoted keys are allowed
+[
+  {
+    filename: "appsettings.json",
+    iterations: 40000,
+  },
+  {
+    filename: "demo/testjson/onestring.json",
+    iterations: 4000,
+    remark: "one long string" // optional 
+  },
+  {
+    filename: "demo/testjson/manystrings.json",
+    iterations: 1000,
+    remark: "many short strings" 
+  },
+  {
+    filename: "demo/testjson/justnums.json",
+    iterations: 1000,
+    remark: "flat int array" 
+  },
+  {
+    filename: "demo/testjson/floats.json",
+    iterations: 1000,
+    remark: "flat float array"
+  },
+  {
+    filename: "demo/testjson/arrays.json",
+    iterations: 1000,
+    remark: "array of empty arrays"
+  },
+  {
+    filename: "demo/testjson/objects.json",
+    iterations: 1000,
+    remark: "array of empty objects"
+  },
+  {
+    filename: "demo/testjson/objects2.json",
+    iterations: 1000,
+    remark: "array of small objects"
+  },
+  {
+    filename: "demo/testjson/mixed.json",
+    iterations: 4000,
+    remark: "flat mixed array"
+  },
+  {
+    filename: "demo/testjson/whitespace.json",
+    iterations: 40000,
+    remark: "much whitespace"
+  },
+  {
+    filename: "demo/testjson/test-notc.json",
+    iterations: 40000,
+    remark: "generic data"
+  },
+  //{
+    //filename: "demo/testjson/test.json",
+    //iterations: 40000,
+    //remark: "generic data (trailing commas)"
+  //},
+]

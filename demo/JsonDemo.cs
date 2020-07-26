@@ -15,6 +15,7 @@ public class User : IJsonEncodable {
 	};
 	public JsValue GetClientInfo() => new Dictionary<string, JsValue> {
 		["name"] = Name,
+		["profileUrl"] = $"/profiles/{Name}"
 	};
 	public static User FromJsValue(JsValue jsValue) {
 		var u = new User(jsValue["name"]);
@@ -36,7 +37,7 @@ public static class JsonDemo {
 
 		Console.WriteLine("[json demo] Extract strings: " + new JsValue(jsobj["hello"]
 			.ArrayValue.Where(j
-				=> j.DataType == JsType.String
+				=> j.DataType == JsValue.Type.String
 			).ToArray()).ToJson());
 
 		Dictionary<string, JsValue> dictionary = new Dictionary<string, JsValue> {

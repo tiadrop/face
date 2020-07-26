@@ -1,0 +1,74 @@
+using System;
+using System.Collections.Generic;
+using System.Globalization;
+using System.Linq;
+using System.Text;
+
+namespace Lantern.Face.Json {
+    public static class Extensions {
+        // primitives
+        public static string ToJson(this string s) => "\"" + s
+           .Replace("\\", "\\\\")
+           .Replace("\"", "\\\"")
+           .Replace("\r", "\\r")
+           .Replace("\n", "\\n")
+           .Replace("\t", "\\t") 
+            + "\"";
+        public static string ToJson(this int v) => v.ToString();
+        public static string ToJson(this double v) => v.ToString(CultureInfo.InvariantCulture);
+        public static string ToJson(this bool v) => v ? "true" : "false";
+
+        public static string ToJson(this IJsonEncodable obj) => obj.ToJsValue().ToJson();
+
+        // base collections
+        public static string ToJson(this JsValue[] list, int maxDepth = JsValue.DefaultMaxDepth)
+            => "[" + String.Join(",", list.Select(val => val == null ? "null" : val.ToJson(maxDepth - 1))) + "]";
+        public static string ToJson(this IDictionary<string, JsValue> dict, int maxDepth = JsValue.DefaultMaxDepth){
+            var sb = new StringBuilder();
+            sb.Append("{");
+            var colonicPairings = dict.Keys.Select(key => {
+                var value = dict[key];
+                var sb = new StringBuilder();
+                sb.Append(key.ToJson());
+                sb.Append(":");
+                sb.Append(value.ToJson(maxDepth - 1));
+                return sb.ToString();
+            });
+
+            sb.Append(string.Join(",", colonicPairings));
+
+            sb.Append("}");
+            return sb.ToString();
+        }
+
+        // compatible Dictionaries
+        public static string ToJson(this IDictionary<string, IJsonEncodable> dict)
+            => new Dictionary<string, JsValue>(dict.Select(kv => 
+                new KeyValuePair<string, JsValue>(kv.Key, kv.Value.ToJsValue())
+            )).ToJson();
+        public static string ToJson(this IDictionary<string, string> dict)
+            => new Dictionary<string, JsValue>(dict.Select(kv =>
+                new KeyValuePair<string, JsValue>(kv.Key, kv.Value) 
+            )).ToJson();
+        public static string ToJson(this IDictionary<string, double> dict)
+            => new Dictionary<string, JsValue>(dict.Select(kv =>
+                new KeyValuePair<string, JsValue>(kv.Key, kv.Value)
+            )).ToJson();
+        public static string ToJson(this IDictionary<string, int> dict)
+            => new Dictionary<string, JsValue>(dict.Select(kv =>
+                new KeyValuePair<string, JsValue>(kv.Key, kv.Value)
+            )).ToJson();
+        public static string ToJson(this IDictionary<string, bool> dict)
+            => new Dictionary<string, JsValue>(dict.Select(kv =>
+                new KeyValuePair<string, JsValue>(kv.Key, kv.Value)
+            )).ToJson();
+
+        // compatible arrays
+        public static string ToJson(this IJsonEncodable[] list) => list.Select(v => v.ToJsValue()).ToArray().ToJson();
+        public static string ToJson(this string[] list) => list.Select(v => new JsValue(v)).ToArray().ToJson();
+        public static string ToJson(this int[] list) => list.Select(v => new JsValue(v)).ToArray().ToJson();
+        public static string ToJson(this bool[] list) => list.Select(v => new JsValue(v)).ToArray().ToJson();
+        public static string ToJson(this double[] list) => list.Select(v => new JsValue(v)).ToArray().ToJson();
+
+    }
+}

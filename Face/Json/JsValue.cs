@@ -1,102 +1,22 @@
 using System.Collections.ObjectModel;
 using System;
 using System.Linq;
-using System.Text;
 using System.Collections.Generic;
 using System.Globalization;
 
 namespace Lantern.Face.Json {
 
-	public static class Extensions {
-		// primitives
-		public static string ToJson(this string s) => "\"" + s
-			.Replace("\\", "\\\\")
-			.Replace("\"", "\\\"")
-			.Replace("\r", "\\r")
-			.Replace("\n", "\\n")
-			.Replace("\t", "\\t")
-			+ "\"";
-		public static string ToJson(this int v) => v.ToString();
-		public static string ToJson(this double v) => v.ToString(CultureInfo.InvariantCulture);
-		public static string ToJson(this bool v) => v ? "true" : "false";
-
-		public static string ToJson(this IJsonEncodable obj) => obj.ToJsValue().ToJson();
-
-		// base collections
-		public static string ToJson(this JsValue[] list, int maxDepth = JsValue.DefaultMaxDepth)
-			=> "[" + String.Join(",", list.Select(val => val == null ? "null" : val.ToJson(maxDepth - 1))) + "]";
-		public static string ToJson(this IDictionary<string, JsValue> dict, int maxDepth = JsValue.DefaultMaxDepth){
-			var sb = new StringBuilder();
-			sb.Append("{");
-			var colonicPairings = dict.Keys.Select(key => {
-				var value = dict[key];
-				var sb = new StringBuilder();
-				sb.Append(key.ToJson());
-				sb.Append(":");
-				sb.Append(value.ToJson(maxDepth - 1));
-				return sb.ToString();
-			});
-
-			sb.Append(string.Join(",", colonicPairings));
-
-			sb.Append("}");
-			return sb.ToString();
-		}
-
-		// compatible Dictionaries
-		public static string ToJson(this IDictionary<string, IJsonEncodable> dict)
-			=> new Dictionary<string, JsValue>(dict.Select(kv => 
-				new KeyValuePair<string, JsValue>(kv.Key, kv.Value.ToJsValue())
-			)).ToJson();
-		public static string ToJson(this IDictionary<string, string> dict)
-			=> new Dictionary<string, JsValue>(dict.Select(kv =>
-				new KeyValuePair<string, JsValue>(kv.Key, kv.Value) 
-			)).ToJson();
-		public static string ToJson(this IDictionary<string, double> dict)
-			=> new Dictionary<string, JsValue>(dict.Select(kv =>
-				new KeyValuePair<string, JsValue>(kv.Key, kv.Value)
-			)).ToJson();
-		public static string ToJson(this IDictionary<string, int> dict)
-			=> new Dictionary<string, JsValue>(dict.Select(kv =>
-				new KeyValuePair<string, JsValue>(kv.Key, kv.Value)
-			)).ToJson();
-		public static string ToJson(this IDictionary<string, bool> dict)
-			=> new Dictionary<string, JsValue>(dict.Select(kv =>
-				new KeyValuePair<string, JsValue>(kv.Key, kv.Value)
-			)).ToJson();
-
-		// compatible arrays
-		public static string ToJson(this IJsonEncodable[] list) => list.Select(v => v.ToJsValue()).ToArray().ToJson();
-		public static string ToJson(this string[] list) => list.Select(v => new JsValue(v)).ToArray().ToJson();
-		public static string ToJson(this int[] list) => list.Select(v => new JsValue(v)).ToArray().ToJson();
-		public static string ToJson(this bool[] list) => list.Select(v => new JsValue(v)).ToArray().ToJson();
-		public static string ToJson(this double[] list) => list.Select(v => new JsValue(v)).ToArray().ToJson();
-
-	}
-
-	/// <summary>
-	/// Implement to allow implicit and explicit casting to JsValue. Confers a ToJson() extension method.
-	/// </summary>
-	public interface IJsonEncodable {
-		/// <summary>
-		/// Express the object as a JsValue
-		/// </summary>
-		/// <returns>A JsValue representing this object</returns>
-		JsValue ToJsValue();
-	}
-
-	public enum JsType {
-		Boolean,
-		Number,
-		String,
-		Object,
-		Array,
-		Null,
-	}
-
 	public class JsValue {
+		public enum Type {
+			Boolean,
+			Number,
+			String,
+			Object,
+			Array,
+			Null,
+		}
 		public const int DefaultMaxDepth = 32;
-		public readonly JsType DataType;
+		public readonly Type DataType;
 		private readonly bool _booleanValue;
 		private readonly double _numberValue;
 		private readonly string _stringValue;
@@ -104,78 +24,71 @@ namespace Lantern.Face.Json {
 		private readonly JsValue[] _arrayValue;
 
 		public JsValue(string s) {
-			DataType = JsType.String;
+			DataType = Type.String;
 			_stringValue = s;
 		}
 		public JsValue(double n) {
-			DataType = JsType.Number;
+			DataType = Type.Number;
 			_numberValue = n;
 		}
 		public JsValue(int n) {
-			DataType = JsType.Number;
+			DataType = Type.Number;
 			_numberValue = Convert.ToDouble(n);
 		}
 		public JsValue(byte n) {
-			DataType = JsType.Number;
+			DataType = Type.Number;
 			_numberValue = Convert.ToDouble(n);
 		}
 		public JsValue(short n) {
-			DataType = JsType.Number;
+			DataType = Type.Number;
 			_numberValue = Convert.ToDouble(n);
 		}
 		public JsValue(uint n) {
-			DataType = JsType.Number;
+			DataType = Type.Number;
 			_numberValue = Convert.ToDouble(n);
 		}
 		public JsValue(ushort n) {
-			DataType = JsType.Number;
+			DataType = Type.Number;
 			_numberValue = Convert.ToDouble(n);
 		}
-		public JsValue(Int64 n) {
-			DataType = JsType.Number;
-			_numberValue = Convert.ToDouble(n);
-		}
-		public JsValue(UInt64 n) {
-			DataType = JsType.Number;
-			_numberValue = Convert.ToDouble(n);
-		}
+		
 		public JsValue(bool b) {
-			DataType = JsType.Boolean;
+			DataType = Type.Boolean;
 			_booleanValue = b;
 		}
 
 		public JsValue(JsValue[] array) {
-			DataType = JsType.Array;
+			DataType = Type.Array;
 			_arrayValue = array;
 		}
 
 		private JsValue(JsNull nul) {
-			DataType = JsType.Null;
+			DataType = Type.Null;
 		}
 
 		public JsValue(IDictionary<string, JsValue> properties) {
-			DataType = JsType.Object;
+			DataType = Type.Object;
 			_objectValue = new ReadOnlyDictionary<string, JsValue>(properties);
 		}
 
 		public JsValue(IEnumerable<(string, JsValue)> keyValuePairs) {
-			DataType = JsType.Object;
+			DataType = Type.Object;
 			var kvpArray = keyValuePairs.Select(pair => new KeyValuePair<string, JsValue>(pair.Item1, pair.Item2));
 			var dict = new Dictionary<string, JsValue>(kvpArray);
 			_objectValue = new ReadOnlyDictionary<string, JsValue>(dict);
 		}
 
 		public JsValue(IEnumerable<KeyValuePair<string, JsValue>> source) {
-			DataType = JsType.Object;
+			DataType = Type.Object;
 			_objectValue = new ReadOnlyDictionary<string, JsValue>(new Dictionary<string, JsValue>(source));
 		}
 
 		public string StringValue {
 			get {
 				switch (DataType) {
-					case JsType.String: return _stringValue;
-					case JsType.Number: return _numberValue.ToString(CultureInfo.InvariantCulture);
-					case JsType.Boolean: return _booleanValue ? "True" : "False";
+					case Type.String: return _stringValue;
+					case Type.Number: return _numberValue.ToString(CultureInfo.InvariantCulture);
+					case Type.Boolean: return _booleanValue ? "True" : "False";
 				}
 				throw new InvalidCastException("Can't read JS " + DataType.ToString() + " as string");
 			}
@@ -183,9 +96,9 @@ namespace Lantern.Face.Json {
 		public double NumberValue {
 			get {
 				switch (DataType) {
-					case JsType.String: return Convert.ToDouble(_stringValue);
-					case JsType.Number: return _numberValue;
-					case JsType.Boolean: return _booleanValue ? 1 : 0;
+					case Type.String: return Convert.ToDouble(_stringValue);
+					case Type.Number: return _numberValue;
+					case Type.Boolean: return _booleanValue ? 1 : 0;
 				}
 				throw new InvalidCastException("Can't read JS " + DataType.ToString() + " as number");
 			}
@@ -193,10 +106,10 @@ namespace Lantern.Face.Json {
 		public bool BooleanValue {
 			get {
 				switch (DataType) {
-					case JsType.String: return Convert.ToBoolean(_stringValue);
-					case JsType.Number: return _numberValue != 0;
-					case JsType.Boolean: return _booleanValue;
-					case JsType.Null: return false;
+					case Type.String: return Convert.ToBoolean(_stringValue);
+					case Type.Number: return _numberValue != 0;
+					case Type.Boolean: return _booleanValue;
+					case Type.Null: return false;
 				}
 				throw new InvalidCastException($"Can't read JS {DataType} as boolean");
 			}
@@ -222,12 +135,12 @@ namespace Lantern.Face.Json {
 		private class JsNull { }
 		public static readonly JsValue Null = new JsValue(new JsNull());
 
-		public bool IsNumber => DataType == JsType.Number;
-		public bool IsString => DataType == JsType.String;
-		public bool IsBoolean => DataType == JsType.Boolean;
-		public bool IsArray => DataType == JsType.Array;
-		public bool IsObject => DataType == JsType.Object;
-		public bool IsNull => DataType == JsType.Null;
+		public bool IsNumber => DataType == Type.Number;
+		public bool IsString => DataType == Type.String;
+		public bool IsBoolean => DataType == Type.Boolean;
+		public bool IsArray => DataType == Type.Array;
+		public bool IsObject => DataType == Type.Object;
+		public bool IsNull => DataType == Type.Null;
 
 		// native -> JS
 		public static implicit operator JsValue(string s) => new JsValue(s);
@@ -246,7 +159,7 @@ namespace Lantern.Face.Json {
 
 		// JS -> native
 		public static implicit operator string(JsValue j){
-			if(j.DataType != JsType.String) throw new InvalidCastException("Implicitly casting JS " + j.DataType.ToString() + " to string is not allowed; consider jsValue.StringValue");
+			if(j.DataType != Type.String) throw new InvalidCastException("Implicitly casting JS " + j.DataType.ToString() + " to string is not allowed; consider jsValue.StringValue");
 			return j.StringValue;
 		}
 		public static implicit operator double(JsValue j) {
@@ -257,11 +170,11 @@ namespace Lantern.Face.Json {
 		public static implicit operator int(JsValue j) {
 			double value = j.NumberValue;
 			if(value != Math.Round(value)) throw new InvalidCastException($"Lossy cast: {value} to int");
-			if (j.DataType != JsType.Number) throw new InvalidCastException("Implicitly casting JS " + j.DataType.ToString() + " to int is not allowed; consider jsValue.NumberValue");
+			if (j.DataType != Type.Number) throw new InvalidCastException("Implicitly casting JS " + j.DataType.ToString() + " to int is not allowed; consider jsValue.NumberValue");
 			return Convert.ToInt32(j.NumberValue);
 		}
 		public static implicit operator bool(JsValue j){
-			if (j.DataType != JsType.Boolean) throw new InvalidCastException("Implicitly casting JS " + j.DataType.ToString() + " to bool is not allowed; consider jsValue.BooleanValue");
+			if (j.DataType != Type.Boolean) throw new InvalidCastException("Implicitly casting JS " + j.DataType.ToString() + " to bool is not allowed; consider jsValue.BooleanValue");
 			return j.BooleanValue;
 		}
 
@@ -312,12 +225,12 @@ namespace Lantern.Face.Json {
 		public string ToJson(int maxDepth = DefaultMaxDepth) {
 			if (maxDepth < 0) throw new ArgumentOutOfRangeException(nameof(maxDepth), "Maximum depth exceeded");
 			return DataType switch {
-				JsType.Boolean => _booleanValue.ToJson(),
-				JsType.Number => _numberValue.ToJson(),
-				JsType.String => _stringValue.ToJson(),
-				JsType.Object => ObjectValue.ToJson(maxDepth),
-				JsType.Array => ArrayValue.ToJson(maxDepth),
-				JsType.Null => "null",
+				Type.Boolean => _booleanValue.ToJson(),
+				Type.Number => _numberValue.ToJson(),
+				Type.String => _stringValue.ToJson(),
+				Type.Object => ObjectValue.ToJson(maxDepth),
+				Type.Array => ArrayValue.ToJson(maxDepth),
+				Type.Null => "null",
 				_ => ""
 			};
 		}
@@ -334,20 +247,20 @@ namespace Lantern.Face.Json {
 			if(obj is JsValue jv){
 				if(jv.DataType != DataType) return false;
 				switch(jv.DataType){
-					case JsType.String:
-						if(DataType != JsType.String) return false;
+					case Type.String:
+						if(DataType != Type.String) return false;
 						obj = jv._stringValue; break;
-					case JsType.Number:
-						if (DataType != JsType.Number) return false;
+					case Type.Number:
+						if (DataType != Type.Number) return false;
 						obj = jv._numberValue; break;
-					case JsType.Boolean:
-						if (DataType != JsType.Boolean) return false;
+					case Type.Boolean:
+						if (DataType != Type.Boolean) return false;
 						obj = jv._booleanValue; break;
-					case JsType.Null:
+					case Type.Null:
 						obj = null;
 						break;
-					case JsType.Array: return ReferenceEquals(obj, this) || ReferenceEquals(obj, this._arrayValue);
-					case JsType.Object: return ReferenceEquals(obj, this) || ReferenceEquals(obj, _objectValue);					
+					case Type.Array: return ReferenceEquals(obj, this) || ReferenceEquals(obj, this._arrayValue);
+					case Type.Object: return ReferenceEquals(obj, this) || ReferenceEquals(obj, _objectValue);					
 				}
 			}
 			if (obj == null) return IsNull;
@@ -374,12 +287,12 @@ namespace Lantern.Face.Json {
 
 		public override int GetHashCode() {
 			return DataType switch {
-				JsType.String => _stringValue.GetHashCode(),
-				JsType.Number => _numberValue.GetHashCode(),
-				JsType.Boolean => _booleanValue.GetHashCode(),
-				JsType.Array => _arrayValue.GetHashCode(),
-				JsType.Object => _objectValue.GetHashCode(),
-				JsType.Null => JsValue.Null.GetHashCode(),
+				Type.String => _stringValue.GetHashCode(),
+				Type.Number => _numberValue.GetHashCode(),
+				Type.Boolean => _booleanValue.GetHashCode(),
+				Type.Array => _arrayValue.GetHashCode(),
+				Type.Object => _objectValue.GetHashCode(),
+				Type.Null => JsValue.Null.GetHashCode(),
 				_ => 0
 			};
 		}
