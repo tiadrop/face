@@ -196,7 +196,7 @@ namespace Lantern.Face.Json {
                 position += match.Value.Length - 1;
                 return match.Value;
             }
-            throw new Exception($"Unexpected '{current}' at input position {positionWithLine}");
+            throw new ParseError($"Unexpected '{current}' at input position {positionWithLine}");
         }
         
         /// <summary>
