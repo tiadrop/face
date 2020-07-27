@@ -83,26 +83,19 @@ namespace Lantern.Face.Json {
 			_objectValue = new ReadOnlyDictionary<string, JsValue>(new Dictionary<string, JsValue>(source));
 		}
 
-		public string StringValue {
-			get {
-				switch (DataType) {
-					case Type.String: return _stringValue;
-					case Type.Number: return _numberValue.ToString(CultureInfo.InvariantCulture);
-					case Type.Boolean: return _booleanValue ? "True" : "False";
-				}
-				throw new InvalidCastException("Can't read JS " + DataType.ToString() + " as string");
-			}
-		}
-		public double NumberValue {
-			get {
-				switch (DataType) {
-					case Type.String: return Convert.ToDouble(_stringValue);
-					case Type.Number: return _numberValue;
-					case Type.Boolean: return _booleanValue ? 1 : 0;
-				}
-				throw new InvalidCastException("Can't read JS " + DataType.ToString() + " as number");
-			}
-		}
+		public string StringValue => DataType switch {
+			Type.String => _stringValue,
+			Type.Number => _numberValue.ToString(CultureInfo.InvariantCulture),
+			Type.Boolean => _booleanValue ? "True" : "False",
+			_ => throw new InvalidCastException($"Can't read JS {DataType} as string")
+		};
+
+		public double NumberValue => DataType switch {
+			Type.String => Convert.ToDouble(_stringValue, CultureInfo.InvariantCulture),
+			Type.Number => _numberValue,
+			Type.Boolean => _booleanValue ? 1 : 0,
+			_ => throw new InvalidCastException($"Can't read JS {DataType} as number")
+		};
 		
 		/// <summary>
 		/// Reads the JsValue as a boolean.
@@ -136,6 +129,19 @@ namespace Lantern.Face.Json {
 		public JsValue PropertyValueOr(string propertyName, JsValue defaultValue) 
 			=> ContainsKey(propertyName) ? this[propertyName] : defaultValue;
 
+		/// <summary>
+		/// Allows for JavaScript-style or-chaining where the first "truthy" value is returned by the chain.
+		/// </summary>
+		/// <param name="alt"></param>
+		/// <returns>this, if its value equates to true otherwise the argument</returns>
+		public JsValue Or(JsValue alt) => BooleanValue ? this : alt;
+		/// <summary>
+		/// Allows for lazily-evaluated JavaScript-style or-chaining where the first "truthy" value is returned by the chain.
+		/// </summary>
+		/// <param name="altFn"></param>
+		/// <returns>this, if its value equates to true otherwise the value returned by altFn</returns>
+		public JsValue Or(Func<JsValue> altFn) => BooleanValue ? this : altFn();
+
 		private class JsNull { }
 		public static readonly JsValue Null = new JsValue(new JsNull());
 
@@ -163,22 +169,26 @@ namespace Lantern.Face.Json {
 
 		// JS -> native
 		public static implicit operator string(JsValue j){
-			if(j.DataType != Type.String) throw new InvalidCastException("Implicitly casting JS " + j.DataType.ToString() + " to string is not allowed; consider jsValue.StringValue");
+			if(j.DataType != Type.String) throw new InvalidCastException(
+				$"Implicitly casting JS {j.DataType} to string is not allowed; consider jsValue.StringValue");
 			return j.StringValue;
 		}
 		public static implicit operator double(JsValue j) {
 			if(j.IsString) return FromJson(j.StringValue).NumberValue;
-			if (!j.IsNumber) throw new InvalidCastException("Implicitly casting JS " + j.DataType.ToString() + " to double is not allowed; consider jsValue.NumberValue");
+			if (!j.IsNumber) throw new InvalidCastException(
+				$"Implicitly casting JS {j.DataType} to double is not allowed; consider jsValue.NumberValue");
 			return j.NumberValue;
 		}
 		public static implicit operator int(JsValue j) {
 			double value = j.NumberValue;
 			if(value != Math.Round(value)) throw new InvalidCastException($"Lossy cast: {value} to int");
-			if (j.DataType != Type.Number) throw new InvalidCastException("Implicitly casting JS " + j.DataType.ToString() + " to int is not allowed; consider jsValue.NumberValue");
+			if (j.DataType != Type.Number) throw new InvalidCastException(
+				$"Implicitly casting JS {j.DataType} to int is not allowed; consider jsValue.NumberValue");
 			return Convert.ToInt32(j.NumberValue);
 		}
 		public static implicit operator bool(JsValue j){
-			if (j.DataType != Type.Boolean) throw new InvalidCastException("Implicitly casting JS " + j.DataType.ToString() + " to bool is not allowed; consider jsValue.BooleanValue");
+			if (j.DataType != Type.Boolean) throw new InvalidCastException(
+				$"Implicitly casting JS {j.DataType} to bool is not allowed; consider jsValue.BooleanValue");
 			return j.BooleanValue;
 		}
 
