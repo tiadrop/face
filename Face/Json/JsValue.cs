@@ -3,7 +3,6 @@ using System;
 using System.Linq;
 using System.Collections.Generic;
 using System.Globalization;
-using System.Runtime.InteropServices.ComTypes;
 
 namespace Lantern.Face.Json {
 
