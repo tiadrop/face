@@ -28,17 +28,15 @@ public static class JsonDemo {
 	public static void Run(){
 		string json = File.ReadAllText("jsontest");
 		JsValue jsobj = JsValue.FromJson(json);
-		Console.WriteLine("[json demo] First key of object.hello[6]: " + jsobj["hello"][6].Keys.First());
+		Console.WriteLine($"[json demo] First key of object.hello[6]: {jsobj["hello"][6].Keys.First()}");
 
 		User[] users = jsobj["hello"][6]["users"].ArrayValue
 			.Select(User.FromJsValue).ToArray();
 
-		Console.WriteLine("[json demo] " + users[1].Name + " verified: " + users[1].Verified.ToString());
+		Console.WriteLine($"[json demo] {users[1].Name} verified: {users[1].Verified}");
 
-		Console.WriteLine("[json demo] Extract strings: " + new JsValue(jsobj["hello"]
-			.ArrayValue.Where(j
-				=> j.DataType == JsValue.Type.String
-			).ToArray()).ToJson());
+		Console.WriteLine(
+			$"[json demo] Extract strings: {new JsValue(jsobj["hello"].ArrayValue.Where(j => j.DataType == JsValue.Type.String).ToArray()).ToJson()}");
 
 		Dictionary<string, JsValue> dictionary = new Dictionary<string, JsValue> {
 			["store_id"] = "C555",
