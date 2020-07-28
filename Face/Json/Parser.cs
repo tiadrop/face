@@ -26,11 +26,11 @@ namespace Lantern.Face.Json {
         /// <summary>
         /// Produces a JsValue object from a JSON-formatted string
         /// </summary>
-        /// <param name="s">JSON-formatted string</param>
+        /// <param name="json">JSON-formatted string</param>
         /// <param name="relaxed">True to allow // comments and unquoted property names</param>
         /// <returns>Object representing the structure defined in JSON</returns>
-        public static JsValue Parse(string s, bool relaxed = false){
-            var parser = new Parser(s, relaxed);
+        public static JsValue Parse(string json, bool relaxed = false){
+            var parser = new Parser(json, relaxed);
             parser.NextToken();
             var result = parser.readValue();
             parser.NextToken(true);
@@ -62,7 +62,9 @@ namespace Lantern.Face.Json {
                 position++;
                 if (position == length) {
                     if (!expectEot) throw new ParseError("Past end of input");
-                } else c = current;
+                    return; // expected eot, found eot
+                } 
+                c = current;
             }
 
             if (relaxed && position < length - 1 && c == '/' && input[position + 1] == '/') { // skip comment if relaxed
@@ -74,7 +76,6 @@ namespace Lantern.Face.Json {
                     if (!expectEot) throw new ParseError("Past end of input");
                     return;
                 }
-                //if(position < length) c = current;
             }
             if(expectEot && position < length) throw new ParseError($"Unexpected '{current}' at input position {position}");
         }

@@ -21,9 +21,14 @@ namespace Lantern.Face.Json {
         public static string ToJson(this IJsonEncodable obj) => obj.ToJsValue().ToJson();
 
         // base collections
-        public static string ToJson(this JsValue[] list, int maxDepth = JsValue.DefaultMaxDepth)
-            => "[" + String.Join(",", list.Select(val => val == null ? "null" : val.ToJson(maxDepth - 1))) + "]";
+        public static string ToJson(this JsValue[] list, int maxDepth = JsValue.DefaultMaxDepth) {
+            if (maxDepth < 0) throw new ArgumentOutOfRangeException(nameof(maxDepth), "Maximum depth exceeded");
+            var jsonValues = list.Select(val => val == null ? "null" : val.ToJson(maxDepth - 1));
+            return $"[{String.Join(",", jsonValues)}]";
+        }
+
         public static string ToJson(this IDictionary<string, JsValue> dict, int maxDepth = JsValue.DefaultMaxDepth){
+            if (maxDepth < 0) throw new ArgumentOutOfRangeException(nameof(maxDepth), "Maximum depth exceeded");
             var sb = new StringBuilder();
             sb.Append("{");
             var colonicPairings = dict.Keys.Select(key => {

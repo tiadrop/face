@@ -265,9 +265,8 @@ namespace Lantern.Face.Json {
 		/// </summary>
 		/// <param name="maxDepth">Specifies a maximum nesting level for array- and object-typed values</param>
 		/// <returns>JSON-formatted string</returns>
-		public string ToJson(int maxDepth = DefaultMaxDepth) {
-			if (maxDepth < 0) throw new ArgumentOutOfRangeException(nameof(maxDepth), "Maximum depth exceeded");
-			return DataType switch {
+		public string ToJson(int maxDepth = DefaultMaxDepth) =>
+			DataType switch {
 				Type.Boolean => _booleanValue.ToJson(),
 				Type.Number => _numberValue.ToJson(),
 				Type.String => _stringValue.ToJson(),
@@ -276,7 +275,6 @@ namespace Lantern.Face.Json {
 				Type.Null => "null",
 				_ => ""
 			};
-		}
 
 		/// <summary>
 		/// Produces a JsValue object from a JSON-formatted string
