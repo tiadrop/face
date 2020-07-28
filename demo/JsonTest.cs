@@ -28,8 +28,10 @@ namespace face.demo {
 
             var tests = JsValue.FromJson(File.ReadAllText("demo/testidx.json"), true).ArrayValue;
             foreach (var test in tests) {
-                string json = test.ContainsKey("json") ? (string)test["json"] : File.ReadAllText(test["filename"]); 
-                BenchmarkAll(json, test["iterations"], test.ContainsKey("remark") ? test["remark"].StringValue : "");
+                string json = test.PropertyValueOr("json", () => File.ReadAllText(test["filename"]));
+                BenchmarkAll(json, test["iterations"], test.PropertyValueOr("remark",
+                    () => test["filename"].StringValue.Split('/').Last()
+                ));
             }
 
             //BenchmarkAll(File.ReadAllText("demo/big.json"), 5);
@@ -124,7 +126,6 @@ namespace face.demo {
             }
 
         }
- 
          
          private static void fail(string desc, string reason) {
              Console.WriteLine("FAILED: " + desc);
@@ -163,6 +164,6 @@ namespace face.demo {
              if (a) pass(desc);
              else fail(desc, "assertion failed");
          }
-         
+
     }
 }
