@@ -3,9 +3,13 @@ using System;
 using System.Linq;
 using System.Collections.Generic;
 using System.Globalization;
+using System.Runtime.InteropServices.ComTypes;
 
 namespace Lantern.Face.Json {
 
+	/// <summary>
+	/// Represents a value as read from, or encodable as, JSON.
+	/// </summary>
 	public class JsValue {
 		public enum Type {
 			Boolean,
@@ -68,7 +72,11 @@ namespace Lantern.Face.Json {
 
 		public JsValue(IDictionary<string, JsValue> properties) {
 			DataType = Type.Object;
-			_objectValue = new ReadOnlyDictionary<string, JsValue>(properties);
+			if (properties is ReadOnlyDictionary<string, JsValue> asReadOnly) {
+				_objectValue = asReadOnly;
+			} else {
+				_objectValue = new ReadOnlyDictionary<string, JsValue>(properties);
+			}
 		}
 
 		public JsValue(IEnumerable<(string, JsValue)> keyValuePairs) {
@@ -83,6 +91,9 @@ namespace Lantern.Face.Json {
 			_objectValue = new ReadOnlyDictionary<string, JsValue>(new Dictionary<string, JsValue>(source));
 		}
 
+		/// <summary>
+		/// Returns the wrapped value as string, casting if necessary
+		/// </summary>
 		public string StringValue => DataType switch {
 			Type.String => _stringValue,
 			Type.Number => _numberValue.ToString(CultureInfo.InvariantCulture),
@@ -90,6 +101,9 @@ namespace Lantern.Face.Json {
 			_ => throw new InvalidCastException($"Can't read JS {DataType} as string")
 		};
 
+		/// <summary>
+		/// Returns the wrapped value as double, casting if necessary
+		/// </summary>
 		public double NumberValue => DataType switch {
 			Type.String => Convert.ToDouble(_stringValue, CultureInfo.InvariantCulture),
 			Type.Number => _numberValue,
@@ -98,48 +112,64 @@ namespace Lantern.Face.Json {
 		};
 		
 		/// <summary>
-		/// Reads the JsValue as a boolean.
+		/// Returns the wrapped value as boolean, casting if necessary
 		/// </summary>
-		public bool BooleanValue {
-			get {
-				return DataType switch {
-					Type.String => Convert.ToBoolean(_stringValue),
-					Type.Number => _numberValue != 0,
-					Type.Boolean => _booleanValue,
-					Type.Null => false,
-					_ => throw new InvalidCastException($"Can't read JS {DataType} as boolean")
-				};
-			}
-		}
-		public JsValue[] ArrayValue {
-			get {
-				if (IsArray) return _arrayValue;
-				if(IsNull) return null;
-				throw new InvalidCastException($"Can't read JS {DataType} as array");
-			}
-		}
-		public ReadOnlyDictionary<string, JsValue> ObjectValue {
-			get {
-				if (IsObject) return _objectValue;
-				if(IsNull) return null;
-				throw new InvalidCastException($"Can't read JS {DataType} as object");
-			}
-		}
+		public bool BooleanValue => DataType switch {
+			Type.String => Convert.ToBoolean(_stringValue),
+			Type.Number => _numberValue != 0,
+			Type.Boolean => _booleanValue,
+			Type.Null => false,
+			_ => throw new InvalidCastException($"Can't read JS {DataType} as boolean")
+		};
 
-		public JsValue PropertyValueOr(string propertyName, JsValue defaultValue) 
-			=> ContainsKey(propertyName) ? this[propertyName] : defaultValue;
+		/// <summary>
+		/// Returns a wrapped Array-typed value
+		/// </summary>
+		public JsValue[] ArrayValue => DataType switch {
+			Type.Array => _arrayValue,
+			Type.Null => null,
+			_ => throw new InvalidCastException($"Can't read JS {DataType} as array")
+		};
+
+		/// <summary>
+		/// Returns a wrapped Object-typed value
+		/// </summary>
+		public ReadOnlyDictionary<string, JsValue> ObjectValue => DataType switch {
+			Type.Object => _objectValue,
+			Type.Null => null,
+			_ => throw new InvalidCastException($"Can't read JS {DataType} as object")
+		};
+
+		/// <summary>
+		/// Returns the specified property of an Object-typed value if it exists, otherwise returns a specified alternative value
+		/// </summary>
+		/// <param name="propertyName"></param>
+		/// <param name="alternative"></param>
+		/// <returns></returns>
+		public JsValue PropertyValueOr(string propertyName, JsValue alternative) 
+			=> ContainsKey(propertyName) ? this[propertyName] : alternative;
+		
+		/// <summary>
+		/// Returns the specified property of an Object-typed value if it exists, otherwise evaluates and returns the result of a delegate
+		/// </summary>
+		/// <param name="propertyName"></param>
+		/// <param name="alternativeFn"></param>
+		/// <returns></returns>
+		public JsValue PropertyValueOr(string propertyName, Func<JsValue> alternativeFn) 
+			=> ContainsKey(propertyName) ? this[propertyName] : alternativeFn();
 
 		/// <summary>
 		/// Allows for JavaScript-style or-chaining where the first "truthy" value is returned by the chain.
 		/// </summary>
 		/// <param name="alt"></param>
-		/// <returns>this, if its value equates to true otherwise the argument</returns>
+		/// <returns>this, if its value equates to true, otherwise the value passed</returns>
 		public JsValue Or(JsValue alt) => BooleanValue ? this : alt;
+		
 		/// <summary>
 		/// Allows for lazily-evaluated JavaScript-style or-chaining where the first "truthy" value is returned by the chain.
 		/// </summary>
 		/// <param name="altFn"></param>
-		/// <returns>this, if its value equates to true otherwise the value returned by altFn</returns>
+		/// <returns>this, if its value equates to true, otherwise the value returned by altFn</returns>
 		public JsValue Or(Func<JsValue> altFn) => BooleanValue ? this : altFn();
 
 		private class JsNull { }

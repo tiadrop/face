@@ -14,7 +14,7 @@ namespace Lantern.Face.Json {
            .Replace("\n", "\\n")
            .Replace("\t", "\\t") 
             + "\"";
-        public static string ToJson(this int v) => v.ToString();
+        public static string ToJson(this int v) => v.ToString(CultureInfo.InvariantCulture);
         public static string ToJson(this double v) => v.ToString(CultureInfo.InvariantCulture);
         public static string ToJson(this bool v) => v ? "true" : "false";
 

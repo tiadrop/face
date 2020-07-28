@@ -1,4 +1,8 @@
+### Synopsis
+
 Face is a language learning project and probably shouldn't be used in the real world. The goal is to practice using type parameters by writing a server-side webpage/component framework that's comfortable and intuitive and where the language of HTML is like a 'compile target', largely absent from the abstraction at hand. It will ideally provide under-the-hood automations such that the abstraction it offers is consistent, versatile and easy on mental resources.
+
+### Direction
 
 A Page's Body is an object of Classes, Attributes and a collection of Parts.
 
@@ -8,7 +12,7 @@ Parts can be components; essentially factories for producing Element structures 
 
 There are two ways to involve JavaScript. The simplest is to `JsUrls.Add(url)` inside your Page derivative's `Prepare()` override. This will include the script in the rendered `<head>` via `face.require()`.
 
-Face adds another scripting mechanism which I've found to be convenient and enjoyable. An *element script* can be registered with `face.register()`, then it'll be called against all elements whose `data-script` attribute matches the registered name. Registration will usually happen in a .js file loaded via `page.JsUrls`, itself usually having been automatically included due to the optional Part override `GetClientRequires()`. Client requirements are considered when writing a Part but not when consuming it. See [Face/parts/TimeAgo.cs](Face/Parts/TimeAgo.cs) and [Face.Parts.General.js](js/Face.Parts.General.js) for an example of this.
+Face adds another client-side scripting mechanism which I've found to be convenient and enjoyable. An *element script* can be registered with `face.register()`, then it'll be called against all elements whose `data-script` attribute matches the registered name. Registration will usually happen in a .js file loaded via `page.JsUrls`, itself usually having been automatically included due to the optional Part override `GetClientRequires()`. Client-side requirements are considered when writing a Part but not when consuming it. See [Face/parts/TimeAgo.cs](Face/Parts/TimeAgo.cs) and [Face.Parts.General.js](js/Face.Parts.General.js) for an example of this approach.
 
 The element script system was designed to allow for asynchronous initialisation. Pass a `Promise` to `face.await()` in your custom JS file and we'll wait until your script's loaded and ready.
 
@@ -31,10 +35,12 @@ Console.WriteLine(input.RenderHtml());
 
 Included is a similar system written in JavaScript. It was written for private use but I feel its similarity and ancestry to this project make it an ideal inclusion to give a degree of cognitive consistency between server and client code. For code and examples see [Face/js-src/jel/](Face/js-src/jel/).
 
+### JSON
+
 Face.Json provides an `IJsonEncodable` interface and an extension method `ToJson()` to produce JSON-formatted data from each of IJsonEncodable, string, int, double, bool, T[] and IDictionary<string, T> where T : IJsonEncodable or a listed primitive.
 
 Rather than attempting to construct native objects from JSON data, `IJsonEncodable.ToJsValue()` and `JsValue.FromJson()` allow for manually-processed dynamic structure with runtime type-checking. Each produces a JsValue object with interfaces to read its internal value as any compatible type including `ReadOnlyDictionary<string, JsValue>` and `JsValue[]`. JS object properties can be read via `value[string]` and JS array entries can be read via `value[int]`. A JsValue reveals its type via `value.DataType`, just as one might use `typeof` in JSON's most natural habitat.
 
 I believe JSON's dynamically-structured nature is a strength and have aimed to take advantage of it while providing type information and safety where appropriate. See [demo/JsonDemo.cs](demo/JsonDemo.cs) for examples of importing and exporting JSON using this system.
 
-According to non-sanitary but generally consistent [benchmark](jsonbenchmark.log) ([JsonTest.cs](demo/JsonTest.cs)), `JsValue.FromJson()` performance is comparable with Utf8Json and Text.Json in most cases and outperforms both in some common cases.
+According to rough but generally consistent [benchmark](jsonbenchmark.log) ([JsonTest.cs](demo/JsonTest.cs)), `JsValue.FromJson()`'s performance is comparable with that of Utf8Json and Text.Json's equivalents in most cases and outperforms both in some common cases.
