@@ -4,7 +4,6 @@
   {
     filename: "appsettings.json",
     iterations: 40000,
-    remark: "appsettings.json"
   },
   {
     filename: "demo/testjson/fail.json",
@@ -14,36 +13,36 @@
   {
     filename: "demo/testjson/onestring.json",
     iterations: 4000,
-    remark: "one long string" // optional 
+    remark: "one long string"
   },
   {
     filename: "demo/testjson/manystrings.json",
-    iterations: 1000,
+    iterations: 4000,
     remark: "many short strings" 
   },
   {
     filename: "demo/testjson/justnums.json",
-    iterations: 1000,
+    iterations: 4000,
     remark: "flat int array" 
   },
   {
     filename: "demo/testjson/floats.json",
-    iterations: 1000,
+    iterations: 4000,
     remark: "flat float array"
   },
   {
     filename: "demo/testjson/arrays.json",
-    iterations: 1000,
+    iterations: 4000,
     remark: "array of empty arrays"
   },
   {
     filename: "demo/testjson/objects.json",
-    iterations: 1000,
+    iterations: 4000,
     remark: "array of empty objects"
   },
   {
     filename: "demo/testjson/objects2.json",
-    iterations: 1000,
+    iterations: 4000,
     remark: "array of small objects"
   },
   {

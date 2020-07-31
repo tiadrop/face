@@ -140,12 +140,12 @@ namespace Lantern.Face.Json {
 		};
 
 		/// <summary>
-		/// Returns the specified property of an Object-typed value if it exists, otherwise returns a specified alternative value
+		/// Returns the specified property of an Object-typed value if it exists, otherwise returns an alternative value
 		/// </summary>
 		/// <param name="propertyName"></param>
 		/// <param name="alternative"></param>
 		/// <returns></returns>
-		public JsValue PropertyValueOr(string propertyName, JsValue alternative) 
+		public JsValue PropertyValueOr(string propertyName, JsValue alternative = null) 
 			=> ContainsKey(propertyName) ? this[propertyName] : alternative;
 		
 		/// <summary>
@@ -304,16 +304,19 @@ namespace Lantern.Face.Json {
 					case Type.Object: return ReferenceEquals(obj, this) || ReferenceEquals(obj, _objectValue);					
 				}
 			}
-			if (obj == null) return IsNull;
-			if (obj is string s) return IsString && s == _stringValue;
-			if (obj is bool b) return IsBoolean && b == _booleanValue;
-			if (obj is double d) return IsNumber && d == _numberValue;
-			if (obj is int i) return IsNumber && Convert.ToDouble(i) == _numberValue;
-			if (obj is long l) return IsNumber && Convert.ToDouble(l) == _numberValue;
-			if (obj is uint ui) return IsNumber && Convert.ToDouble(ui) == _numberValue;
-			if (obj is ulong ul) return IsNumber && Convert.ToDouble(ul) == _numberValue;
-			if (obj is byte by) return IsNumber && Convert.ToDouble(by) == _numberValue;
-			return false;
+
+			return obj switch {
+				null => IsNull,
+				string s => IsString && s == _stringValue,
+				bool b => IsBoolean && b == _booleanValue,
+				double d => IsNumber && d == _numberValue,
+				int i => IsNumber && Convert.ToDouble(i) == _numberValue,
+				long l => IsNumber && Convert.ToDouble(l) == _numberValue,
+				uint ui => IsNumber && Convert.ToDouble(ui) == _numberValue,
+				ulong ul => IsNumber && Convert.ToDouble(ul) == _numberValue,
+				byte by => IsNumber && Convert.ToDouble(@by) == _numberValue,
+				_ => false
+			};
 		}
 
 		public static bool operator ==(JsValue a, JsValue b) {
