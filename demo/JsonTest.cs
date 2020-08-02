@@ -31,15 +31,11 @@ namespace face.demo {
                 string json = test.PropertyValueOr("json", () => File.ReadAllText(test["filename"]));
                 BenchmarkAll(json, test["iterations"], test.PropertyValueOr("remark",
                     () => test["filename"].StringValue.Split('/').Last()
-                ));
+                ), test.PropertyValueOr("relaxed", false));
             }
-
-            //BenchmarkAll(File.ReadAllText("demo/big.json"), 5);
-            //BenchmarkAll(File.ReadAllText("demo/huge.json"), 4);
-            //BenchmarkAll(File.ReadAllText("demo/enormous.json"), 1);
         }
 
-        private static void BenchmarkAll(string json, int iters, string remark = "") {
+        private static void BenchmarkAll(string json, int iters, string remark = "", bool relaxed = false) {
             double lengthInMb = (double)json.Length / (1024f * 1024f);
             double lengthInKb = (double)json.Length / 1024f;
 
@@ -52,9 +48,9 @@ namespace face.demo {
             
             Benchmark("Utf8Json", iters, () => Utf8Json.JsonSerializer.Deserialize<object>(json));
             Benchmark("System.Text", iters, () => System.Text.Json.JsonSerializer.Deserialize<object>(json, new JsonSerializerOptions() {
-                AllowTrailingCommas = true
+                AllowTrailingCommas = true, // for equivalent functionality
             }));
-            Benchmark("** Face", iters, () => JsValue.FromJson(json));
+            Benchmark("** Face", iters, () => JsValue.FromJson(json, relaxed));
             //Benchmark("Newtonsoft", iters, () => Newtonsoft.Json.JsonConvert.DeserializeObject<object>(json));
             Console.WriteLine();
         }

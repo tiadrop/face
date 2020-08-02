@@ -6,11 +6,6 @@
     iterations: 40000,
   },
   {
-    filename: "demo/testjson/fail.json",
-    iterations: 1,
-    remark: "failure expected"
-  },
-  {
     filename: "demo/testjson/onestring.json",
     iterations: 4000,
     remark: "one long string"
@@ -65,4 +60,53 @@
     //iterations: 40000,
     //remark: "generic data (trailing commas)"
   //},
+
+//  {
+//    filename: "demo/big.json",
+//    iterations: 20,
+//    remark: "generated test data"
+//  },
+//  {
+//    filename: "demo/huge.json",
+//    iterations: 0,
+//    remark: "github event log"
+//  },
+//  {
+//    filename: "demo/enormous.json",
+//    iterations: 0,
+//    remark: "street data"
+//  },
+
+// errors
+
+  {
+    filename: "demo/testjson/fail-truE.json",
+    iterations: 1,
+    remark: "\"truE\""
+  },
+  {
+    filename: "demo/testjson/fail-array.json",
+    iterations: 1,
+    remark: "unclosed array"
+  },
+  {
+    filename: "demo/testjson/fail-object.json",
+    iterations: 1,
+    remark: "bad object"
+  },
+  {
+    filename: "demo/testjson/fail-object2.json",
+    iterations: 1,
+    remark: "extra '\"'"
+  },
+  {
+    filename: "demo/testjson/fail-innerexception.json",
+    iterations: 1,
+    remark: "non-ParseError base"
+  },
+  {
+    filename: "demo/testjson/fail-deep.json",
+    iterations: 1,
+    remark: "nested error"
+  }
 ]

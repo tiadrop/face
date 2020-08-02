@@ -12,7 +12,9 @@ namespace Lantern.Face.Json {
            .Replace("\"", "\\\"")
            .Replace("\r", "\\r")
            .Replace("\n", "\\n")
-           .Replace("\t", "\\t") 
+           .Replace("\t", "\\t")
+           .Replace("\x08", "\\b")
+           .Replace("\x0c", "\\f")
             + "\"";
         public static string ToJson(this int v) => v.ToString(CultureInfo.InvariantCulture);
         public static string ToJson(this double v) => v.ToString(CultureInfo.InvariantCulture);
@@ -29,21 +31,11 @@ namespace Lantern.Face.Json {
 
         public static string ToJson(this IDictionary<string, JsValue> dict, int maxDepth = JsValue.DefaultMaxDepth){
             if (maxDepth < 0) throw new ArgumentOutOfRangeException(nameof(maxDepth), "Maximum depth exceeded");
-            var sb = new StringBuilder();
-            sb.Append("{");
             var colonicPairings = dict.Keys.Select(key => {
                 var value = dict[key];
-                var sb = new StringBuilder();
-                sb.Append(key.ToJson());
-                sb.Append(":");
-                sb.Append(value.ToJson(maxDepth - 1));
-                return sb.ToString();
+                return $"{key.ToJson()}:{value.ToJson(maxDepth - 1)}";
             });
-
-            sb.Append(string.Join(",", colonicPairings));
-
-            sb.Append("}");
-            return sb.ToString();
+            return $"{{{string.Join(",", colonicPairings)}}}";
         }
 
         // compatible Dictionaries
