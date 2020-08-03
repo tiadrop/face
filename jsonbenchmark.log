@@ -1,77 +1,92 @@
 Utf8Json: Utf8Json.JsonSerializer.Deserialize<object>(json)
 System.Text: System.Text.Json.JsonSerializer.Deserialize<object>(json, {...AllowTrailingCommas})
 Face: Lantern.Face.Json.JsValue.FromJson(json)
+Newtonsoft: Newtonsoft.Json.JsonConvert.DeserializeObject<object>(json)
 Score is iterations/time
 
-*** 0.186kb (appsettings.json) x 40000 iterations:
-Utf8Json: 213.926/ms
-System.Text: 32.757/ms
-** Face: 329.943/ms
+*** 0.186kb (appsettings.json) x 10000 iterations:
+Utf8Json: 145.882/ms
+System.Text: 26.142/ms
+** Face: 230.599/ms
+Newtonsoft: 41.084/ms
 
-*** 28.572kb (one long string) x 4000 iterations:
-Utf8Json: 9.775/ms
-System.Text: 16.190/ms
-** Face: 11.236/ms
+*** 28.572kb (one long string) x 10000 iterations:
+Utf8Json: 9.839/ms
+System.Text: 19.870/ms
+** Face: 11.091/ms
+Newtonsoft: 9.924/ms
 
-*** 26.737kb (many short strings) x 4000 iterations:
-Utf8Json: 1.357/ms
-System.Text: 1.437/ms
-** Face: 1.186/ms
+*** 26.737kb (many short strings) x 10000 iterations:
+Utf8Json: 1.348/ms
+System.Text: 1.440/ms
+** Face: 0.967/ms
+Newtonsoft: 0.630/ms
 
-*** 27.072kb (flat int array) x 4000 iterations:
-Utf8Json: 352.160/sec
-System.Text: 0.557/ms
-** Face: 422.137/sec
+*** 27.072kb (flat int array) x 10000 iterations:
+Utf8Json: 337.843/sec
+System.Text: 0.558/ms
+** Face: 339.750/sec
+Newtonsoft: 264.515/sec
 
-*** 27.657kb (flat float array) x 4000 iterations:
-Utf8Json: 1.353/ms
-System.Text: 1.916/ms
-** Face: 1.401/ms
+*** 27.657kb (flat float array) x 10000 iterations:
+Utf8Json: 1.224/ms
+System.Text: 1.844/ms
+** Face: 1.005/ms
+Newtonsoft: 0.770/ms
 
-*** 27.563kb (array of empty arrays) x 4000 iterations:
-Utf8Json: 1.023/ms
-System.Text: 385.490/sec
-** Face: 1.237/ms
+*** 27.563kb (array of empty arrays) x 10000 iterations:
+Utf8Json: 1.014/ms
+System.Text: 372.449/sec
+** Face: 0.723/ms
+Newtonsoft: 304.540/sec
 
-*** 27.423kb (array of empty objects) x 4000 iterations:
-Utf8Json: 0.579/ms
-System.Text: 382.693/sec
-** Face: 481.346/sec
+*** 27.423kb (array of empty objects) x 10000 iterations:
+Utf8Json: 0.560/ms
+System.Text: 367.265/sec
+** Face: 354.275/sec
+Newtonsoft: 295.851/sec
 
-*** 28.032kb (array of small objects) x 4000 iterations:
-Utf8Json: 0.533/ms
-System.Text: 0.531/ms
-** Face: 440.953/sec
+*** 28.032kb (array of small objects) x 10000 iterations:
+Utf8Json: 492.456/sec
+System.Text: 510.200/sec
+** Face: 252.268/sec
+Newtonsoft: 213.813/sec
 
-*** 8.088kb (flat mixed array) x 4000 iterations:
-Utf8Json: 3.428/ms
-System.Text: 2.984/ms
-** Face: 3.588/ms
+*** 8.088kb (flat mixed array) x 10000 iterations:
+Utf8Json: 3.307/ms
+System.Text: 3.127/ms
+** Face: 2.816/ms
+Newtonsoft: 1.629/ms
 
-*** 0.978kb (much whitespace) x 4000 iterations:
-Utf8Json: 48.871/ms
-System.Text: 23.337/ms
-** Face: 62.579/ms
+*** 0.978kb (much whitespace) x 10000 iterations:
+Utf8Json: 49.235/ms
+System.Text: 24.689/ms
+** Face: 56.176/ms
+Newtonsoft: 39.882/ms
 
-*** 0.322kb (generic data) x 4000 iterations:
-Utf8Json: 128.152/ms
-System.Text: 28.380/ms
-** Face: 140.393/ms
+*** 0.322kb (generic data) x 10000 iterations:
+Utf8Json: 133.748/ms
+System.Text: 30.932/ms
+** Face: 43.999/ms
+Newtonsoft: 43.435/ms
 
-*** 569.399kb (generated test data) x 1000 iterations:
-Utf8Json: 136.636/sec
-System.Text: 152.883/sec
-** Face: 138.435/sec
+*** 569.399kb (generated test data) x 50 iterations:
+Utf8Json: 133.752/sec
+System.Text: 152.074/sec
+** Face: 107.027/sec
+Newtonsoft: 65.867/sec
 
-*** 24.890mb (github event log) x 5 iterations:
-Utf8Json: 3.056/sec
-System.Text: 3.712/sec
-** Face: 2.277/sec
+*** 24.890mb (github event log) x 10 iterations:
+Utf8Json: 2.889/sec
+System.Text: 3.781/sec
+** Face: 1.801/sec
+Newtonsoft: 1.140/sec
 
-*** 180.987mb (street data) x 1 iterations:
-Utf8Json: 0.207/sec
-System.Text: 0.237/sec
-** Face: 0.096/sec
+*** 180.987mb (street data) x 5 iterations:
+Utf8Json: 0.188/sec
+System.Text: 0.232/sec
+** Face: 0.083/sec
+Newtonsoft: 0.058/sec
 
 *** 0.035kb ("truE") x 1 iterations:
 Utf8Json: JsonParsingException: expected:'true', actual:'true', at offset:19
@@ -83,28 +98,35 @@ System.Text: JsonException: 'truE,
   5,
 ]' is an invalid JSON literal. Expected the literal 'true'. LineNumber: 4 | BytePositionInLine: 5.
 ** Face: ParseError: Unexpected 'truE' at [3], input position 19 (line 5)
+Newtonsoft: JsonReaderException: Error parsing boolean value. Path '[2]', line 5, position 5.
 
 *** 0.019kb (unclosed array) x 1 iterations:
 Utf8Json: IndexOutOfRangeException: Index was outside the bounds of the array.
 System.Text: JsonException: Expected depth to be zero at the end of the JSON payload. There is an open JSON object or array that should be closed. Path: $ | LineNumber: 0 | BytePositionInLine: 19. --> JsonReaderException: Expected depth to be zero at the end of the JSON payload. There is an open JSON object or array that should be closed. LineNumber: 0 | BytePositionInLine: 19.
 ** Face: ParseError: Past end of input at [3][0]
+Newtonsoft: JsonWriterException: Unexpected end when reading token. Path '[3]'.
 
 *** 0.034kb (bad object) x 1 iterations:
 Utf8Json: InvalidOperationException: Invalid Json Token:EndObject
 System.Text: JsonException: '}' is an invalid start of a value. Path: $ | LineNumber: 3 | BytePositionInLine: 0. --> JsonReaderException: '}' is an invalid start of a value. LineNumber: 3 | BytePositionInLine: 0.
-** Face: ParseError: Unexpected '}' at {"hello"}, input position 34 (line 4)
+** Face: ParseError: Unexpected '}' at hello, input position 34 (line 4)
+Newtonsoft: JsonReaderException: Unexpected character encountered while parsing value: }. Path 'hello', line 4, position 0.
 
 *** 0.020kb (extra '"') x 1 iterations:
 Utf8Json: JsonParsingException: expected:',', actual:'"', at offset:17
 System.Text: JsonException: '"' is invalid after a value. Expected either ',', '}', or ']'. Path: $ | LineNumber: 1 | BytePositionInLine: 15. --> JsonReaderException: '"' is invalid after a value. Expected either ',', '}', or ']'. LineNumber: 1 | BytePositionInLine: 15.
-** Face: ParseError: Expected ',' or '}' following value, found '"' at {"name"}, input position 17 (line 2)
+** Face: ParseError: Expected ',' or '}' following value, found '"' at name, input position 17 (line 2)
+Newtonsoft: JsonReaderException: After parsing a value an unexpected character was encountered: ". Path 'name', line 2, position 15.
 
 *** 0.014kb (non-ParseError base) x 1 iterations:
-Utf8Json: 65.789/ms
+Utf8Json: 156.250/ms
 System.Text: JsonException: ']' is invalid within a number, immediately after a sign character ('+' or '-'). Expected a digit ('0'-'9'). Path: $ | LineNumber: 0 | BytePositionInLine: 13. --> JsonReaderException: ']' is invalid within a number, immediately after a sign character ('+' or '-'). Expected a digit ('0'-'9'). LineNumber: 0 | BytePositionInLine: 13.
 ** Face: ParseError: Failed to parse number at [2], input position 13 --> FormatException: Input string was not in a correct format.
+Newtonsoft: JsonReaderException: Input string '0e' is not a valid number. Path '[2]', line 1, position 13.
 
-*** 0.188kb (nested error) x 1 iterations:
+*** 0.189kb (nested error) x 1 iterations:
 Utf8Json: JsonParsingException: Invalid Character"
-System.Text: JsonException: '"' is not a hex digit following '\u' within a JSON string. The string should be correctly escaped. Path: $ | LineNumber: 11 | BytePositionInLine: 24. --> JsonReaderException: '"' is not a hex digit following '\u' within a JSON string. The string should be correctly escaped. LineNumber: 11 | BytePositionInLine: 24.
-** Face: ParseError: Malformed \u sequence at {"things"}[1]{"polygon"}[1]{"bad"}, input position 158 (line 12)
+System.Text: JsonException: '"' is not a hex digit following '\u' within a JSON string. The string should be correctly escaped. Path: $ | LineNumber: 11 | BytePositionInLine: 26. --> JsonReaderException: '"' is not a hex digit following '\u' within a JSON string. The string should be correctly escaped. LineNumber: 11 | BytePositionInLine: 26.
+** Face: ParseError: Malformed \u sequence at things[1].polygon[1]{"bad y"}, input position 161 (line 12)
+Newtonsoft: JsonReaderException: Invalid Unicode escape sequence: \u4"
+ . Path 'things[1].polygon[1]['bad y']', line 12, position 25.

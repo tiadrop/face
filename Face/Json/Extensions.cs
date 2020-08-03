@@ -7,15 +7,28 @@ using System.Text;
 namespace Lantern.Face.Json {
     public static class Extensions {
         // primitives
-        public static string ToJson(this string s) => "\"" + s
-           .Replace("\\", "\\\\")
-           .Replace("\"", "\\\"")
-           .Replace("\r", "\\r")
-           .Replace("\n", "\\n")
-           .Replace("\t", "\\t")
-           .Replace("\x08", "\\b")
-           .Replace("\x0c", "\\f")
-            + "\"";
+        public static string ToJson(this string s) {
+            s = s.Replace("\\", "\\\\");
+            // escape any non-ascii
+            var sb = new StringBuilder(s.Length);
+            for (var i = 0; i < s.Length; i++) {
+                char ch = s[i];
+                var code = (int) ch;
+                if (code > 126 || code < 32) {
+                    sb.Append($"\\u{code:X4}");
+                } else sb.Append(ch);
+            }
+
+            return "\"" + sb.ToString()
+                            .Replace("\"", "\\\"")
+                       .Replace("\r", "\\r")
+                       .Replace("\n", "\\n")
+                       .Replace("\t", "\\t")
+                       .Replace("\x08", "\\b")
+                       .Replace("\x0c", "\\f")
+                   + "\"";
+        }
+
         public static string ToJson(this int v) => v.ToString(CultureInfo.InvariantCulture);
         public static string ToJson(this double v) => v.ToString(CultureInfo.InvariantCulture);
         public static string ToJson(this bool v) => v ? "true" : "false";
