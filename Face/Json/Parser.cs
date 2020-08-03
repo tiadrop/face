@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Text;
 using System.Text.RegularExpressions;
 
@@ -17,7 +18,7 @@ namespace Lantern.Face.Json {
 
         public ParseError(string reason, Exception inner) : base(reason, inner) { }
         public readonly string jsonPath;
-        public ParseError(JsValue jsonPath) : base() {
+        public ParseError(JsValue jsonPath) {
             this.jsonPath = jsonPath;
         }
         public ParseError(Exception innerException, JsValue jsonPath) : base(null, innerException) {
@@ -65,6 +66,7 @@ namespace Lantern.Face.Json {
                 // consolidate ParseError path chains
                 List<string> location = new List<string>(2);
                 string path = e.FullJsonPath;
+                if (path.Length > 0 && path[0] == '.') path = path.Substring(1);
                 if (path != "") location.Add(path);
                 if (e.JsonPosition > -1) location.Add(parser.describePosition(e.JsonPosition));
                 string suffix = location.Count > 0 ? $" at {string.Join(", ", location)}" : "";
@@ -151,7 +153,7 @@ namespace Lantern.Face.Json {
                 case '{': return readObject();
             }
 
-            if (numberMatch(true)) return readNumber();
+            if (numberMatch(c)) return readNumber();
 
             if (length - position > 3 && (c == 't' || c == 'f' || c == 'n')) {
                 string nextFour = input[position .. (position + 4)];
@@ -176,13 +178,12 @@ namespace Lantern.Face.Json {
         }
 
         private double readNumber() {
-            int lengthFound = 1;
-            while (position < length && numberMatch(false, 1)) {
+            int lengthFound = 1; // we already know (from readValue()) that current is numeric
+            while (position < length - 1 && numberMatch(input[position + 1])) {
                 position++;
                 lengthFound++;
             }
 
-            pointOrExpFound = false;
             string numberString = input[(position + 1 - lengthFound) .. (position + 1)];
             try {
                 return double.Parse(numberString);
@@ -190,31 +191,19 @@ namespace Lantern.Face.Json {
                 throw new ParseError( $"Failed to parse number", e, position + 1);
             }
         }
-
-        private bool pointOrExpFound = false;
-
+        
         /// <summary>
-        /// Ascertains whether the the current character is numeric. '.' and 'e' are considered numeric on first encounter after setting pointOrExpFound = false.
-        /// Sets pointOrExpFound to true if the character is '.' or 'e'.
+        /// Ascertains whether a character is numeric. '.', 'e', '+' and '-' are considered numeric.
         /// </summary>
-        /// <param name="firstCharacter">Defines whether to accept "-" as numeric, i.e. if we are expecting the first character of the numeric value</param>
-        /// <param name="offset"></param>
+        /// <param name="ch"></param>
         /// <returns>True if the symbol at current position is numeric</returns>
-        private bool numberMatch(bool firstCharacter, int offset = 0) {
-            switch (input[position + offset]) {
-                case '0': case '1': case '2': case '3': case '4':
-                case '5': case '6': case '7': case '8': case '9':
-                    return true;
-                case '-': 
-                    return firstCharacter;
-                case '.':
-                case 'e' when !firstCharacter:
-                    if(pointOrExpFound) return false;
-                    pointOrExpFound = true;
-                    return true;
-                default: return false;
-            }
-        }
+        private bool numberMatch(char ch) =>
+            ch switch {
+                '0' => true, '1' => true, '2' => true, '3' => true, '4' => true,
+                '5' => true, '6' => true, '7' => true, '8' => true, '9' => true,
+                '-' => true, '+' => true, '.' => true, 'e' => true, 'E' => true,
+                _ => false
+            };
 
         private bool isHexadecimalDigit(int offset) {
             byte c = (byte) input[position + offset];
@@ -226,21 +215,41 @@ namespace Lantern.Face.Json {
 
         /// <summary>
         /// Reads the next four characters as a hexadecimal symbol reference and places the read position at the end.
+        /// Attempts to read a following "\uxxxx" sequence for surrogate pairs
         /// </summary>
         /// <returns>String containing the referenced character</returns>
         /// <exception cref="ParseError"></exception>
-        private string readEscapedCodepoint() {
+        private string readEscapedCodepointChar() {
+            int codepoint = readEscapedCodepoint();
+            if (codepoint >= HighSurrogateStart && codepoint <= 57343 && position < length - 6 && input[position + 1] == '\\' && input[position + 2] == 'u') {
+                position += 2; // skip \u
+                var high = codepoint - HighSurrogateStart;
+                var low = readEscapedCodepoint() - LowSurrogateStart;
+                codepoint = (high * 1024) + low + 65536;
+            }
+            try {
+                return char.ConvertFromUtf32(codepoint);
+            }
+            catch (Exception e) {
+                throw new ParseError($"Failed to parse \\u sequence", e, position - 4);
+            }
+        }
+
+        private const ushort HighSurrogateStart = 55296;
+        private const ushort LowSurrogateStart = 56320;
+
+        /// <summary>
+        /// Reads the next four digits as a hexadecimal value and moves the input position by four places
+        /// </summary>
+        /// <returns></returns>
+        /// <exception cref="ParseError"></exception>
+        private ushort readEscapedCodepoint() {
             position += 4;
             if(position >= length) throw new ParseError("Past end of input");
             if(!isHexadecimalDigit(0) || !isHexadecimalDigit(-1) || !isHexadecimalDigit(-2) || !isHexadecimalDigit(-3))
-                throw new ParseError($"Malformed \\u sequence", position - 4);
-            try {
-                return char.ConvertFromUtf32(
-                    int.Parse(input[(position - 3) .. (position + 1)], System.Globalization.NumberStyles.HexNumber));
-            }
-            catch (ArgumentOutOfRangeException e) {
-                throw new ParseError($"Failed to parse \\u sequence at {describePosition(position - 4)}", e);
-            }
+                throw new ParseError($"Malformed \\u sequence", position - 3);
+            var sequence = input[(position - 3) .. (position + 1)];
+            return ushort.Parse(sequence, System.Globalization.NumberStyles.HexNumber);
         }
         
         private static readonly Regex unquotedKeyRegex = new Regex("\\G\\w+");
@@ -271,28 +280,18 @@ namespace Lantern.Face.Json {
                 if(escaping){
                     escaping = false;
                     try {
-                        switch (current) {
-                            case 'n':
-                                sb.Append('\n');
-                                break;
-                            case 'r':
-                                sb.Append('\r');
-                                break;
-                            case 't':
-                                sb.Append('\t');
-                                break;
-                            case '"':
-                                sb.Append('"');
-                                break;
-                            case 'u': {
-                                sb.Append(readEscapedCodepoint());
-                                break;
-                            }
-                            case '\\':
-                                sb.Append('\\');
-                                break;
-                            default: throw new ParseError($"Unknown escape character '{current}'", position);
-                        }
+                        sb.Append(current switch {
+                            'n' => '\n',
+                            'r' => '\r',
+                            't' => '\t',
+                            '"' => '"',
+                            'u' => readEscapedCodepointChar(),
+                            '\\' => '\\',
+                            '/' => '/',
+                            'b' => '\x08',
+                            'f' => '\x0c',
+                            _ => throw new ParseError($"Unknown escape character '{current}'", position)
+                        });
                     } catch (ParseError e) {
                         throw;
                     } catch (Exception e) {
@@ -320,12 +319,12 @@ namespace Lantern.Face.Json {
         /// <returns></returns>
         /// <exception cref="ParseError"></exception>
         private JsValue readArray(){
-            List<JsValue> found = new List<JsValue>();
+            LinkedList<JsValue> found = new LinkedList<JsValue>();
             
             try {
                 while (true) {
-                    // current is either [ or ,
-                    NextToken(); 
+                    // current is either [ (first loop) or , (subsequent)
+                    NextToken(); // move to ] or value 
                     if (current == ']') return found.ToArray();
 
                     var value = readValue();
@@ -333,10 +332,10 @@ namespace Lantern.Face.Json {
                     
                     switch (current) {
                         case ']':
-                            found.Add(value);
+                            found.AddLast(value);
                             return found.ToArray();
                         case ',':
-                            found.Add(value);
+                            found.AddLast(value);
                             continue;
                         default: throw new ParseError($"Expected ',' or ']', found '{current}'", position - 1);
                     }
@@ -359,7 +358,6 @@ namespace Lantern.Face.Json {
         /// <returns>A JsValue object with a DataType of Object</returns>
         /// <exception cref="ParseError"></exception>
         private Dictionary<string, JsValue> readObject() {
-            var startPosition = position;
             var result = new Dictionary<string, JsValue>();
 
             while (true) {
@@ -380,6 +378,8 @@ namespace Lantern.Face.Json {
                 } catch (ParseError e) {
                     throw new ParseError(e, $"{{key {result.Count}}}");
                 }
+                
+                // key is now known; future ParseErrors can include it in path
 
                 try {
                     NextToken(); // move to :
@@ -389,10 +389,9 @@ namespace Lantern.Face.Json {
 
                     NextToken(); // move to value
 
-                    JsValue value;
-                    value = readValue();
-
+                    var value = readValue();
                     result[keyValue] = value;
+
                     NextToken(); // move to , or }
 
                 switch (current) {
@@ -403,10 +402,16 @@ namespace Lantern.Face.Json {
                             $"Expected ',' or '}}' following value, found '{current}'", position);
                     }
                 } catch (ParseError e) { // surely EOT
-                    throw new ParseError(e, $"{{{shortenKey(keyValue).ToJson()}}}");
+                    throw new ParseError(e, FormatObjectPathComponent(keyValue));
                 }
             }
         }
 
+        private static Regex nonWord = new Regex("\\W");
+
+        private static string FormatObjectPathComponent(string s) {
+            s = shortenKey(s);
+            return nonWord.IsMatch(s) ? $"{{{shortenKey(s).ToJson()}}}" : $".{s}";
+        }
     }
 }
