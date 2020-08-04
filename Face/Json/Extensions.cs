@@ -11,8 +11,7 @@ namespace Lantern.Face.Json {
             s = s.Replace("\\", "\\\\");
             // escape any non-ascii
             var sb = new StringBuilder(s.Length);
-            for (var i = 0; i < s.Length; i++) {
-                char ch = s[i];
+            foreach (var ch in s) {
                 var code = (int) ch;
                 if (code > 126 || code < 32) {
                     sb.Append($"\\u{code:X4}");
@@ -36,10 +35,10 @@ namespace Lantern.Face.Json {
         public static string ToJson(this IJsonEncodable obj) => obj.ToJsValue().ToJson();
 
         // base collections
-        public static string ToJson(this JsValue[] list, int maxDepth = JsValue.DefaultMaxDepth) {
+        public static string ToJson(this IEnumerable<JsValue> list, int maxDepth = JsValue.DefaultMaxDepth) {
             if (maxDepth < 0) throw new ArgumentOutOfRangeException(nameof(maxDepth), "Maximum depth exceeded");
             var jsonValues = list.Select(val => val == null ? "null" : val.ToJson(maxDepth - 1));
-            return $"[{String.Join(",", jsonValues)}]";
+            return $"[{string.Join(",", jsonValues)}]";
         }
 
         public static string ToJson(this IDictionary<string, JsValue> dict, int maxDepth = JsValue.DefaultMaxDepth){
@@ -74,11 +73,11 @@ namespace Lantern.Face.Json {
             )).ToJson();
 
         // compatible arrays
-        public static string ToJson(this IJsonEncodable[] list) => list.Select(v => v.ToJsValue()).ToArray().ToJson();
-        public static string ToJson(this string[] list) => list.Select(v => new JsValue(v)).ToArray().ToJson();
-        public static string ToJson(this int[] list) => list.Select(v => new JsValue(v)).ToArray().ToJson();
-        public static string ToJson(this bool[] list) => list.Select(v => new JsValue(v)).ToArray().ToJson();
-        public static string ToJson(this double[] list) => list.Select(v => new JsValue(v)).ToArray().ToJson();
+        public static string ToJson(this IEnumerable<IJsonEncodable> list) => list.Select(v => v.ToJsValue()).ToArray().ToJson();
+        public static string ToJson(this IEnumerable<string> list) => list.Select(v => new JsValue(v)).ToArray().ToJson();
+        public static string ToJson(this IEnumerable<int> list) => list.Select(v => new JsValue(v)).ToArray().ToJson();
+        public static string ToJson(this IEnumerable<bool> list) => list.Select(v => new JsValue(v)).ToArray().ToJson();
+        public static string ToJson(this IEnumerable<double> list) => list.Select(v => new JsValue(v)).ToArray().ToJson();
 
     }
 }
