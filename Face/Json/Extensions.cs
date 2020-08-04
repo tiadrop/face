@@ -5,10 +5,14 @@ using System.Linq;
 using System.Text;
 
 namespace Lantern.Face.Json {
-    public static class Extensions {
+    internal static class Extensions {
         // primitives
         public static string ToJson(this string s) {
-            s = s.Replace("\\", "\\\\");
+            s = s.Replace("\\", "\\\\").Replace("\r", "\\r")
+                .Replace("\n", "\\n")
+                .Replace("\t", "\\t")
+                .Replace("\x08", "\\b")
+                .Replace("\x0c", "\\f");
             // escape any non-ascii
             var sb = new StringBuilder(s.Length);
             foreach (var ch in s) {
@@ -20,12 +24,7 @@ namespace Lantern.Face.Json {
 
             return "\"" + sb.ToString()
                             .Replace("\"", "\\\"")
-                       .Replace("\r", "\\r")
-                       .Replace("\n", "\\n")
-                       .Replace("\t", "\\t")
-                       .Replace("\x08", "\\b")
-                       .Replace("\x0c", "\\f")
-                   + "\"";
+                        + "\"";
         }
 
         public static string ToJson(this int v) => v.ToString(CultureInfo.InvariantCulture);
@@ -59,33 +58,38 @@ namespace Lantern.Face.Json {
         }
 
         // compatible Dictionaries
-        public static string ToJson(this IDictionary<string, IJsonEncodable> dict)
+        public static string ToJson(this IDictionary<string, IJsonEncodable> dict, bool formatted)
             => new Dictionary<string, JsValue>(dict.Select(kv => 
                 new KeyValuePair<string, JsValue>(kv.Key, kv.Value.ToJsValue())
-            )).ToJson();
-        public static string ToJson(this IDictionary<string, string> dict)
+            )).ToJson(formatted);
+        public static string ToJson(this IDictionary<string, string> dict, bool formatted)
             => new Dictionary<string, JsValue>(dict.Select(kv =>
                 new KeyValuePair<string, JsValue>(kv.Key, kv.Value) 
-            )).ToJson();
-        public static string ToJson(this IDictionary<string, double> dict)
+            )).ToJson(formatted);
+        public static string ToJson(this IDictionary<string, double> dict, bool formatted)
             => new Dictionary<string, JsValue>(dict.Select(kv =>
                 new KeyValuePair<string, JsValue>(kv.Key, kv.Value)
-            )).ToJson();
-        public static string ToJson(this IDictionary<string, int> dict)
+            )).ToJson(formatted);
+        public static string ToJson(this IDictionary<string, int> dict, bool formatted)
             => new Dictionary<string, JsValue>(dict.Select(kv =>
                 new KeyValuePair<string, JsValue>(kv.Key, kv.Value)
-            )).ToJson();
-        public static string ToJson(this IDictionary<string, bool> dict)
+            )).ToJson(formatted);
+        public static string ToJson(this IDictionary<string, bool> dict, bool formatted)
             => new Dictionary<string, JsValue>(dict.Select(kv =>
                 new KeyValuePair<string, JsValue>(kv.Key, kv.Value)
-            )).ToJson();
+            )).ToJson(formatted);
 
         // compatible arrays
-        public static string ToJson(this IEnumerable<IJsonEncodable> list) => list.Select(v => v.ToJsValue()).ToArray().ToJson();
-        public static string ToJson(this IEnumerable<string> list) => list.Select(v => new JsValue(v)).ToArray().ToJson();
-        public static string ToJson(this IEnumerable<int> list) => list.Select(v => new JsValue(v)).ToArray().ToJson();
-        public static string ToJson(this IEnumerable<bool> list) => list.Select(v => new JsValue(v)).ToArray().ToJson();
-        public static string ToJson(this IEnumerable<double> list) => list.Select(v => new JsValue(v)).ToArray().ToJson();
+        public static string ToJson(this IEnumerable<IJsonEncodable> list, bool formatted) 
+            => list.Select(v => v.ToJsValue()).ToArray().ToJson(formatted);
+        public static string ToJson(this IEnumerable<string> list, bool formatted) 
+            => list.Select(v => new JsValue(v)).ToArray().ToJson(formatted);
+        public static string ToJson(this IEnumerable<int> list, bool formatted) 
+            => list.Select(v => new JsValue(v)).ToArray().ToJson(formatted);
+        public static string ToJson(this IEnumerable<bool> list, bool formatted) 
+            => list.Select(v => new JsValue(v)).ToArray().ToJson(formatted);
+        public static string ToJson(this IEnumerable<double> list, bool formatted) 
+            => list.Select(v => new JsValue(v)).ToArray().ToJson(formatted);
 
     }
 }
