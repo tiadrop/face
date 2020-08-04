@@ -35,19 +35,27 @@ namespace Lantern.Face.Json {
         public static string ToJson(this IJsonEncodable obj) => obj.ToJsValue().ToJson();
 
         // base collections
-        public static string ToJson(this IEnumerable<JsValue> list, int maxDepth = JsValue.DefaultMaxDepth) {
+        public static string ToJson(this IEnumerable<JsValue> list, bool formatted = false,  int maxDepth = JsValue.DefaultMaxDepth) {
             if (maxDepth < 0) throw new ArgumentOutOfRangeException(nameof(maxDepth), "Maximum depth exceeded");
-            var jsonValues = list.Select(val => val == null ? "null" : val.ToJson(maxDepth - 1));
-            return $"[{string.Join(",", jsonValues)}]";
+            var jsonValues = list.Select(val => val == null ? "null" : val.ToJson(formatted, maxDepth - 1));
+            var newline = formatted ? "\n" : "";
+            var result = string.Join($",{newline}", jsonValues);
+            var space = formatted ? " " : "";
+            if (formatted) result = result.Replace("\n", "\n  ");
+            return $"[{newline}{space}{space}{result}{newline}]";
         }
 
-        public static string ToJson(this IDictionary<string, JsValue> dict, int maxDepth = JsValue.DefaultMaxDepth){
+        public static string ToJson(this IDictionary<string, JsValue> dict, bool formatted = false,  int maxDepth = JsValue.DefaultMaxDepth){
             if (maxDepth < 0) throw new ArgumentOutOfRangeException(nameof(maxDepth), "Maximum depth exceeded");
+            var space = formatted ? " " : "";
             var colonicPairings = dict.Keys.Select(key => {
                 var value = dict[key];
-                return $"{key.ToJson()}:{value.ToJson(maxDepth - 1)}";
+                return $"{key.ToJson()}{space}:{space}{value.ToJson(formatted, maxDepth - 1)}";
             });
-            return $"{{{string.Join(",", colonicPairings)}}}";
+            var newline = formatted ? "\n" : "";
+            var result = string.Join($",{newline}", colonicPairings);
+            if (formatted) result = result.Replace("\n", "\n  ");
+            return $"{{{newline}{space}{space}{result}{newline}}}";
         }
 
         // compatible Dictionaries

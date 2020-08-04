@@ -263,15 +263,16 @@ namespace Lantern.Face.Json {
 		/// <summary>
 		/// Converts the object to a JSON-formatted string
 		/// </summary>
+		/// <param name="formatted"></param>
 		/// <param name="maxDepth">Specifies a maximum nesting level for array- and object-typed values</param>
 		/// <returns>JSON-formatted string</returns>
-		public string ToJson(int maxDepth = DefaultMaxDepth) =>
+		public string ToJson(bool formatted = false, int maxDepth = DefaultMaxDepth) =>
 			DataType switch {
 				Type.Boolean => _booleanValue.ToJson(),
 				Type.Number => _numberValue.ToJson(),
 				Type.String => _stringValue.ToJson(),
-				Type.Object => ObjectValue.ToJson(maxDepth),
-				Type.Array => ArrayValue.ToJson(maxDepth),
+				Type.Object => ObjectValue.ToJson(formatted, maxDepth),
+				Type.Array => ArrayValue.ToJson(formatted, maxDepth),
 				Type.Null => "null",
 				_ => ""
 			};
