@@ -1,6 +1,5 @@
 using System;
 using System.Collections.Generic;
-using System.Linq;
 using System.Text;
 using System.Text.RegularExpressions;
 
@@ -19,17 +18,36 @@ namespace Lantern.Face.Json {
         //public ParseError(string reason, Exception inner) : base(reason, inner) { }
         private readonly string jsonPath = "";
         
-        public ParseError(Exception innerException, JsValue jsonPath) : base($"Error parsing `{getJsonPath(innerException, jsonPath)}`", innerException) {
+        public ParseError(Exception innerException, JsValue jsonPath) : base($"Error parsing `{getJsonPath(innerException, jsonPath).TrimStart('.')}`", innerException) {
             this.jsonPath = jsonPath;
             if (innerException is ParseError innerParseError) JsonPosition = innerParseError.JsonPosition;
         }
 
         private static string getJsonPath(Exception innerException, JsValue path) {
             if (!(innerException is ParseError inner)) return path ?? ""; 
-            return (path ?? "") + inner.FullJsonPath;
+            return (path ?? "") + inner.fullJsonPath;
         }
 
-        public string FullJsonPath => getJsonPath(InnerException, jsonPath);
+        private string fullJsonPath => getJsonPath(InnerException, jsonPath);
+
+        /// <summary>
+        /// Reduces a chain of ParseErrors into a single ParseError, assembling the
+        /// JSON path from the chain.
+        /// </summary>
+        /// <param name="parser"></param>
+        /// <returns></returns>
+        internal ParseError Consolidate(Parser parser) {
+            var location = new List<string>(2);
+            string path = fullJsonPath;
+            if (path.Length > 0 && path[0] == '.') path = path.Substring(1);
+            if (path != "") location.Add($"`{path}`");
+            if (JsonPosition > -1) location.Add(parser.describePosition(JsonPosition));
+            string suffix = location.Count > 0 ? $" at {string.Join(", ", location)}" : "";
+            var baseParseError = this;
+            while (baseParseError.InnerException is ParseError inner) baseParseError = inner;
+            return new ParseError($"{baseParseError.Message}{suffix}", baseParseError.InnerException);
+        }
+        
     }
     
     internal class Parser {
@@ -60,16 +78,7 @@ namespace Lantern.Face.Json {
                     throw new ParseError($"Unexpected '{parser.current}'", parser.position);
                 return result;
             } catch (ParseError e) {
-                // consolidate ParseError path chains
-                var location = new List<string>(2);
-                string path = e.FullJsonPath;
-                if (path.Length > 0 && path[0] == '.') path = path.Substring(1);
-                if (path != "") location.Add($"`{path}`");
-                if (e.JsonPosition > -1) location.Add(parser.describePosition(e.JsonPosition));
-                string suffix = location.Count > 0 ? $" at {string.Join(", ", location)}" : "";
-                var baseParseError = e;
-                while (baseParseError.InnerException is ParseError inner) baseParseError = inner;
-                throw new ParseError($"{baseParseError.Message}{suffix}", baseParseError.InnerException);
+                throw e.Consolidate(parser);
             }
         }
        
@@ -95,8 +104,8 @@ namespace Lantern.Face.Json {
                 }
 
                 char c = current;
-                // skip whitespace
                 
+                // skip whitespace
                 while (c == ' ' || c == '\r' || c == '\t' || c == '\n') {
                     position++;
                     if (position == length) {
@@ -127,7 +136,7 @@ namespace Lantern.Face.Json {
         /// </summary>
         /// <param name="pos">A position in the JSON input</param>
         /// <returns>E.g. "input position 61 (line 4)"</returns>
-        private string describePosition(int pos) {
+        internal string describePosition(int pos) {
             string s = $"input position {pos.ToString()}";
             int lineCount = crLfRegex.Matches(input.Substring(0, pos)).Count;
             // needn't scan for a cr/lf if we've already found some
@@ -150,23 +159,26 @@ namespace Lantern.Face.Json {
 
             if (isNumeric(c)) return readNumber();
 
-            if (length - position <= 3 || (c != 't' && c != 'f' && c != 'n'))
-                throw new ParseError($"Expected value, found '{current}'", position);
-            string nextFour = input[position .. (position + 4)];
-            switch (nextFour) {
-                case "null":
-                    position += 3;
-                    return JsValue.Null;
-                case "true":
-                    position += 3;
-                    return true;
-                case "fals" when length - position > 4 && input[position + 4] == 'e':
-                    position += 4;
-                    return false;
-                default:
-                    var key = readKeyRelaxed();
-                    position -= key.Length - 1;
-                    throw new ParseError($"Expected value, found '{shortenKey(key)}'", position);
+            try {
+                string nextFour = input[position .. (Math.Min(position + 4, length))];
+                switch (nextFour) {
+                    case "null":
+                        position += 3;
+                        return JsValue.Null;
+                    case "true":
+                        position += 3;
+                        return true;
+                    case "fals" when input[position + 4] == 'e':
+                        position += 4;
+                        return false;
+                    default:
+                        var key = readKeyRelaxed();
+                        throw new ParseError($"Expected value, found '{shortenKey(key)}'", position - key.Length - 1);
+                }
+            } catch (IndexOutOfRangeException) {
+                throw new ParseError("Expected value, past end of input");
+            } catch (ArgumentOutOfRangeException) {
+                throw new ParseError("Expected value, past end of input");
             }
         }
 
@@ -206,38 +218,49 @@ namespace Lantern.Face.Json {
         /// <exception cref="ParseError"></exception>
         private string readEscapedCodepointChar() {
             int codepoint = readEscapedCodepoint();
-            if (codepoint >= HighSurrogateStart && codepoint <= 57343 && position < length - 6 && input[position + 1] == '\\' && input[position + 2] == 'u') {
+            if (codepoint >= highSurrogateStart && codepoint <= 57343) {
+                try {
+                    if (input[position + 1] != '\\' || input[position + 2] != 'u') {
+                        throw new ParseError($"Expected low surrogate, found '{current}'", position);
+                    }
+                } catch (ArgumentOutOfRangeException) {
+                    throw new ParseError("Expected low surrogate \\u sequence, past end of input", position);
+                }
+
                 position += 2; // skip \u
-                var high = codepoint - HighSurrogateStart;
-                var low = readEscapedCodepoint() - LowSurrogateStart;
+                var high = codepoint - highSurrogateStart;
+                var low = readEscapedCodepoint() - lowSurrogateStart;
                 codepoint = high * 1024 + low + 65536;
+                try {
+                    return char.ConvertFromUtf32(codepoint);
+                } catch (ArgumentOutOfRangeException) {
+                    // having successfully called readEscapedCodepoint() (twice) we can be sure these 12 chars exist and are \uxxxx\uxxxx
+                    var pair = input.Substring(position - 11, 12);
+                    throw new ParseError($"Invalid surrogate pair '{pair}'", position - 3);
+                }
             }
-            try {
-                return char.ConvertFromUtf32(codepoint);
-            }
-            catch (Exception e) {
-                throw new ParseError("Failed to parse \\u sequence", e, position - 4);
-            }
+            return ((char)codepoint).ToString();
         }
 
-        private const ushort HighSurrogateStart = 55296;
-        private const ushort LowSurrogateStart = 56320;
+        private const ushort highSurrogateStart = 55296;
+        private const ushort lowSurrogateStart = 56320;
 
         /// <summary>
-        /// Reads the next four digits as a hexadecimal value and moves the input position by four places
+        /// Reads the next four digits as a hexadecimal value and moves the read position by four places
         /// </summary>
         /// <returns></returns>
         /// <exception cref="ParseError"></exception>
         private ushort readEscapedCodepoint() {
             position += 4;
-//            if(position >= length) throw new ParseError("Past end of input");
-            //if(!isHexadecimalDigit(0) || !isHexadecimalDigit(-1) || !isHexadecimalDigit(-2) || !isHexadecimalDigit(-3))
-            //    throw new ParseError($"Malformed \\u sequence", position - 3);
             try {
                 var sequence = input[(position - 3) .. (position + 1)];
                 return ushort.Parse(sequence, System.Globalization.NumberStyles.HexNumber);
-            } catch (Exception e) {
-                throw new ParseError("Failed to parse \\u sequence", e, position - 3);
+            } catch (ArgumentOutOfRangeException){
+                throw new ParseError("Past end of input while reading \\u sequence", position - 3);
+            } catch (FormatException) {
+                position -= 3;
+                var capture = new Regex(".\\w*").Match(input, position, Math.Min(4, length - position));
+                throw new ParseError($"Invalid \\u sequence '{capture}'", position);
             }
         }
         
@@ -283,6 +306,7 @@ namespace Lantern.Face.Json {
                     } catch (ParseError) {
                         throw;
                     } catch (Exception e) {
+                        // may be able to remove this catch (therefore the try) without effect;
                         throw new ParseError("Failed to parse string", e, startPosition);
                     }
                 } else if(current == '\\'){
@@ -389,7 +413,7 @@ namespace Lantern.Face.Json {
                         throw new ParseError(
                             $"Expected ',' or '}}' following value, found '{current}'", position);
                     }
-                } catch (ParseError e) { // surely EOT
+                } catch (Exception e) { // surely EOT
                     throw new ParseError(e, FormatObjectPathComponent(keyValue));
                 }
             }

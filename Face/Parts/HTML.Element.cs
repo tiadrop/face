@@ -29,7 +29,6 @@ namespace Lantern.Face.Parts.Html {
 		private Random rnd = new Random();
 		public Element.Attributes Attribs = new Element.Attributes();
 		private readonly Element.DataAttributes _data; // set in constructor; requires (wraps) _attribs
-		public Element.ClassList _classes = new Element.ClassList();
 
 		public PartList<TChild> Content = new PartList<TChild>();
 
@@ -44,7 +43,7 @@ namespace Lantern.Face.Parts.Html {
 					Add(item);
 				}
 			}
-			public ClassList(string[] s) => AddRange(s);
+			public ClassList(IEnumerable<string> s) => AddRange(s);
 			public override string ToString() => string.Join(' ', this); 
 		}
 
@@ -71,7 +70,7 @@ namespace Lantern.Face.Parts.Html {
 		}
 
 		public void Append(TChild part) {
-			this.Content.Add(part);
+			Content.Add(part);
 		}
 
 		public override async Task<string> RenderHtml() {

@@ -337,7 +337,7 @@ namespace Lantern.Face.Json {
 				Type.Boolean => _booleanValue.GetHashCode(),
 				Type.Array => _arrayValue.GetHashCode(),
 				Type.Object => _objectValue.GetHashCode(),
-				Type.Null => JsValue.Null.GetHashCode(),
+				Type.Null => 0,
 				_ => 0
 			};
 		}

@@ -3,7 +3,6 @@ using System.IO;
 using Lantern.Face.Json;
 using System.Collections.Generic;
 using System.Linq;
-using face.demo;
 
 public class User : IJsonEncodable {
 	public readonly string Name;
@@ -18,8 +17,9 @@ public class User : IJsonEncodable {
 		["profileUrl"] = $"/profiles/{Name}"
 	};
 	public static User FromJsValue(JsValue jsValue) {
-		var u = new User(jsValue["name"]);
-		if (jsValue.ContainsKey("email_verified")) u.Verified = jsValue["email_verified"];
+		var u = new User(jsValue["name"]) {
+			Verified = jsValue.PropertyValueOr("email_verified", false)
+		};
 		return u;
 	}
 }
@@ -43,7 +43,7 @@ public static class JsonDemo {
 			["pending_user_accounts"] = new [] { new User("Jedward"), new User("Hoagie"), },
 			["unread_notice_ids"] = new []{ 52, 111 },
 		};
-		Console.WriteLine("[json demo] dictionary.ToJson(): " + dictionary.ToJson());
+		Console.WriteLine("[json demo] dictionary<string,jsvalue>.ToJson(true): " + dictionary.ToJson(true));
 
 		/*
 			[json demo] First key of object.hello[6]: animal
