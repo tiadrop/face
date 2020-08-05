@@ -116,7 +116,7 @@ namespace Lantern.FaceDemo {
 		public static void Main(string[] args) {
 			// uncomment as wanted
 			JsonTest.Run();
-			JsonDemo.Run();
+			//JsonDemo.Run();
 			//Server.Start();
 		}
 	}

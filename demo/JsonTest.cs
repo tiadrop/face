@@ -1,112 +1,97 @@
 using System;
 using System.Collections.Generic;
-using System.Diagnostics;
 using System.IO;
 using System.Linq;
-using System.Text.Json;
 using Lantern.Face.Json;
 
 namespace face.demo {
+    
     public static class JsonTest {
-        public static string UnpackException(Exception e) {
-            string result = $"{e.GetType().Name}: {e.Message}";
-            while (e.InnerException != null) {
-                e = e.InnerException;
-                result += " --> " + $"{e.GetType().Name}: {e.Message}";
-            }
-            return result;
-        }
-
         public static void Run() {
-            Console.WriteLine("Utf8Json: Utf8Json.JsonSerializer.Deserialize<object>(json)");
-            Console.WriteLine(
-                "System.Text: System.Text.Json.JsonSerializer.Deserialize<object>(json, {...AllowTrailingCommas})");
-            Console.WriteLine("Face: Lantern.Face.Json.JsValue.FromJson(json)");
-            //Console.WriteLine("Newtonsoft: Newtonsoft.Json.JsonConvert.DeserializeObject<object>(json)");
-            Console.WriteLine("Score is iterations/time");
-            Console.WriteLine();
-
-            var tests = JsValue.FromJson(File.ReadAllText("demo/testidx.json"), true).ArrayValue;
-            foreach (var test in tests) {
-                string json = test.PropertyValueOr("json", () => File.ReadAllText(test["filename"]));
-                BenchmarkAll(json, test["iterations"], test.PropertyValueOr("remark",
-                    () => test["filename"].StringValue.Split('/').Last()
-                ), test.PropertyValueOr("relaxed", false));
-            }
-        }
-
-        private static void BenchmarkAll(string json, int iters, string remark = "", bool relaxed = false) {
-            double lengthInMb = (double)json.Length / (1024f * 1024f);
-            double lengthInKb = (double)json.Length / 1024f;
-
-            if (remark != "") remark = $" ({remark})";
-            if (lengthInMb > 1) {
-                Console.WriteLine($"*** {lengthInMb:F}mb{remark} x {iters} iterations:");
-            } else {
-                Console.WriteLine($"*** {lengthInKb:F}kb{remark} x {iters} iterations:");
-            }
             
-            Benchmark("Utf8Json", iters, () => Utf8Json.JsonSerializer.Deserialize<object>(json));
-            Benchmark("System.Text", iters, () => System.Text.Json.JsonSerializer.Deserialize<object>(json, new JsonSerializerOptions() {
-                AllowTrailingCommas = true, // for equivalent functionality
-            }));
-            Benchmark("** Face", iters, () => JsValue.FromJson(json, relaxed));
-            //Benchmark("Newtonsoft", iters, () => Newtonsoft.Json.JsonConvert.DeserializeObject<object>(json));
-            Console.WriteLine();
-        }
-        
-        public static void Benchmark(string title, int iterations, Action test, string remark = "") {
-            GC.Collect();
+            var bm = new Benchmarker("JSON");
+            if (File.Exists("benchmarkStandard.json"))
+                bm.PreviousData = JsValue.FromJson(File.ReadAllText("benchmarkStandard.json"));
+            
+            bm.TimeLimitMs = 3200;
+            bm.Participants["Face"] = data => JsValue.FromJson(data as string);
+            bm.Participants["Utf8Json"] = data => Utf8Json.JsonSerializer.Deserialize<object>(data as string);
+            bm.Participants["System.Text"] = data => System.Text.Json.JsonSerializer.Deserialize<object>(data as string);
+            bm.Participants["Newtonsoft"] = data => Newtonsoft.Json.JsonConvert.DeserializeObject<object>(data as string);
+            
+            bm.Tests.Add("hardcoded_example", new Benchmarker.Test {
+                Remark = "basic example test",
+                Action = run => run("[4,6,8]")
+            });
 
-            Stopwatch timer = new Stopwatch();
-            timer.Start();
-            try {
-                for (var i = 0; i < iterations; i++) {
-                    test();
+            // load the rest from testidx.json
+            JsValue[] testIndex = JsValue.FromJson(File.ReadAllText("demo/testidx.json"), true);
+            foreach (var testSpec in testIndex) {
+                if (testSpec.ContainsKey("filename") && !File.Exists(testSpec["filename"])) {
+                    Console.WriteLine($"Missing test source '{testSpec["filename"]}'");
+                    continue;
                 }
-            } catch (Exception e) {
-                Console.WriteLine($"{title}: {UnpackException(e)}");
-                return;
+                string json = testSpec.ContainsKey("filename")
+                    ? File.ReadAllText(testSpec["filename"])
+                    : testSpec["json"].StringValue;
+                string testRef = testSpec.ContainsKey("filename")
+                    ? testSpec["filename"].StringValue.Split("/").Last()
+                    : testSpec["ref"].StringValue;
+                bm.Tests[testRef] = new Benchmarker.Test {
+                    Remark = $"{formatFileSize(json.Length)} ━ {testSpec.PropertyValueOr("remark", testRef)}",
+                    Action = run => run(json)
+                };
             }
 
-            double timeInMs = timer.Elapsed.TotalMilliseconds;
-            double timeInSeconds = timer.Elapsed.TotalMilliseconds / 1000;
-
-            if (iterations / timeInSeconds < 512) {
-                Console.WriteLine($"{title}: {iterations / timeInSeconds:F}/sec");
-            } else {
-                if (iterations / timeInMs < 512) {
-                    Console.WriteLine($"{title}: {iterations / timeInMs:F}/ms");
-                } else {
-                    Console.WriteLine($"{title}: {iterations / (timeInMs * 1000):F}/mcs");
-                }
-            }
+            bm.Run();
+            File.WriteAllText("benchmarkStandard.json", bm.PreviousData.ToJson(true));
         }
-        
-         /// <summary>
+
+        private static string formatFileSize(int size) {
+            string unit = "b";
+            double newSize = Convert.ToDouble(size);
+            if (newSize > 1024) {
+                unit = "kb";
+                newSize /= 1024;
+            }
+            if (newSize > 1024) {
+                unit = "mb";
+                newSize /= 1024;
+            }
+            if (newSize > 1024) {
+                unit = "gb"; // lofl
+                newSize /= 1024;
+            }
+            return $"{newSize:F0}{unit}";
+        }
+
+        /// <summary>
         /// Attempts to parse all .json files in the given directory. Files beginning with 'y' are expected to parse without error, 'n' to fail and anything else to either parse or fail.
         /// </summary>
         /// <param name="pathToJsonFiles"></param>
         /// <param name="showPass">True to output all test results, false to only show failures</param>
-        public static void RunSuite(string pathToJsonFiles, bool showPass) {
+        /// <param name="filter">Limits tests to filenames containing this string</param>
+        public static void RunSuite(string pathToJsonFiles, bool showPass, string filter = "") {
             var filenames = Directory.GetFiles(pathToJsonFiles);
 
             foreach (var filename in filenames) {
+                if(!filename.Contains(filter)) continue;
                 string content = File.ReadAllText(filename);
                 var basename = filename.Split("/").Last();
+                basename += " " + (content.Length > 32 ? content.Substring(0, 32) + "..." : content);
                 var expectSuccess = basename[0] == 'y';
                 var expectFailure = basename[0] == 'n';
-                Console.WriteLine($"Parsing {basename}");
+                //Console.WriteLine($"Parsing {basename}");
                 try {
                     JsValue.FromJson(content);
                 } catch (Exception e) {
                     if (expectSuccess) {
-                        Console.WriteLine("** FAILED ** - " + basename + " - " + e.Message);
-                        Console.WriteLine(content);
+                        Console.WriteLine("** FAILED ** - " + basename + " - " + Benchmarker.RenderException(e));
+                        //Console.WriteLine(content);
                     } else if (expectFailure) {
-                        if(showPass) Console.WriteLine("Pass (expected error) - " + basename + " - " + e.Message);
+                        if(showPass) Console.WriteLine("Pass (expected error) - " + basename + " - " + Benchmarker.RenderException(e));
                     } else {
-                        if(showPass) Console.WriteLine("Pass (optional error THROWN) - " + basename + " - " + e.Message);
+                        if(showPass) Console.WriteLine("Pass (optional, thrown) - " + basename + " - " + Benchmarker.RenderException(e));
                     }
                     continue;
                 }
@@ -117,7 +102,7 @@ namespace face.demo {
                     Console.WriteLine("** FAILED ** (expected error) - " + basename);
                     Console.WriteLine(content);
                 } else {
-                    if(showPass) Console.WriteLine("Pass (optional failure) - " + basename);
+                    if(showPass) Console.WriteLine("Pass (optional) - " + basename);
                 }
             }
 

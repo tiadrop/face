@@ -1,0 +1,293 @@
+{
+  "hardcoded_example" : {
+    "Face" : {
+      "placement" : 1,
+      "score" : 563.8849767796333
+    },
+    "Utf8Json" : {
+      "placement" : 2,
+      "score" : 518.4341924642986
+    },
+    "Newtonsoft" : {
+      "placement" : 3,
+      "score" : 285.6844197361883
+    },
+    "System.Text" : {
+      "placement" : 4,
+      "score" : 129.4071198665854
+    }
+  },
+  "appsettings.json" : {
+    "Utf8Json" : {
+      "placement" : 1,
+      "score" : 287.27985122306256
+    },
+    "Face" : {
+      "placement" : 2,
+      "score" : 277.18659980862583
+    },
+    "System.Text" : {
+      "placement" : 3,
+      "score" : 111.80204231038928
+    },
+    "Newtonsoft" : {
+      "placement" : 4,
+      "score" : 111.5111547873403
+    }
+  },
+  "onestring.json" : {
+    "System.Text" : {
+      "placement" : 1,
+      "score" : 34.92283470393652
+    },
+    "Face" : {
+      "placement" : 2,
+      "score" : 12.068028078649492
+    },
+    "Newtonsoft" : {
+      "placement" : 3,
+      "score" : 10.760570188345604
+    },
+    "Utf8Json" : {
+      "placement" : 4,
+      "score" : 10.481908746739267
+    }
+  },
+  "manystrings.json" : {
+    "System.Text" : {
+      "placement" : 1,
+      "score" : 1.4996300454238847
+    },
+    "Utf8Json" : {
+      "placement" : 2,
+      "score" : 1.3821567902038177
+    },
+    "Face" : {
+      "placement" : 3,
+      "score" : 1.2846521720652682
+    },
+    "Newtonsoft" : {
+      "placement" : 4,
+      "score" : 0.6195068169649145
+    }
+  },
+  "justnums.json" : {
+    "System.Text" : {
+      "placement" : 1,
+      "score" : 0.6132275845324697
+    },
+    "Utf8Json" : {
+      "placement" : 2,
+      "score" : 0.36715139295519905
+    },
+    "Face" : {
+      "placement" : 3,
+      "score" : 0.3441681011949161
+    },
+    "Newtonsoft" : {
+      "placement" : 4,
+      "score" : 0.26524289860563777
+    }
+  },
+  "floats.json" : {
+    "System.Text" : {
+      "placement" : 1,
+      "score" : 2.0747155046364267
+    },
+    "Utf8Json" : {
+      "placement" : 2,
+      "score" : 1.3138784338431588
+    },
+    "Face" : {
+      "placement" : 3,
+      "score" : 1.1260129390884177
+    },
+    "Newtonsoft" : {
+      "placement" : 4,
+      "score" : 0.7809797809957755
+    }
+  },
+  "arrays.json" : {
+    "Utf8Json" : {
+      "placement" : 1,
+      "score" : 0.8770773719724817
+    },
+    "Face" : {
+      "placement" : 2,
+      "score" : 0.8522844253081736
+    },
+    "System.Text" : {
+      "placement" : 3,
+      "score" : 0.3942354406540085
+    },
+    "Newtonsoft" : {
+      "placement" : 4,
+      "score" : 0.26420865588156106
+    }
+  },
+  "objects.json" : {
+    "Utf8Json" : {
+      "placement" : 1,
+      "score" : 0.5422478378101734
+    },
+    "Face" : {
+      "placement" : 2,
+      "score" : 0.4301792654156395
+    },
+    "System.Text" : {
+      "placement" : 3,
+      "score" : 0.39987924896303967
+    },
+    "Newtonsoft" : {
+      "placement" : 4,
+      "score" : 0.2833330563521022
+    }
+  },
+  "objects2.json" : {
+    "System.Text" : {
+      "placement" : 1,
+      "score" : 0.5613418926361939
+    },
+    "Face" : {
+      "placement" : 2,
+      "score" : 0.5368048127707302
+    },
+    "Utf8Json" : {
+      "placement" : 3,
+      "score" : 0.515177990246609
+    },
+    "Newtonsoft" : {
+      "placement" : 4,
+      "score" : 0.21953968118840983
+    }
+  },
+  "mixed.json" : {
+    "Face" : {
+      "placement" : 1,
+      "score" : 3.5626323644010753
+    },
+    "System.Text" : {
+      "placement" : 2,
+      "score" : 3.3830968780072013
+    },
+    "Utf8Json" : {
+      "placement" : 3,
+      "score" : 3.3691071559810997
+    },
+    "Newtonsoft" : {
+      "placement" : 4,
+      "score" : 1.6114827316047857
+    }
+  },
+  "whitespace.json" : {
+    "Face" : {
+      "placement" : 1,
+      "score" : 57.50299561825986
+    },
+    "Utf8Json" : {
+      "placement" : 2,
+      "score" : 47.43635200118799
+    },
+    "System.Text" : {
+      "placement" : 3,
+      "score" : 41.330276336008204
+    },
+    "Newtonsoft" : {
+      "placement" : 4,
+      "score" : 38.96930071477051
+    }
+  },
+  "test-notc.json" : {
+    "Face" : {
+      "placement" : 1,
+      "score" : 129.79533296050084
+    },
+    "Utf8Json" : {
+      "placement" : 2,
+      "score" : 120.39508675921233
+    },
+    "System.Text" : {
+      "placement" : 3,
+      "score" : 67.23466228700164
+    },
+    "Newtonsoft" : {
+      "placement" : 4,
+      "score" : 45.86817375800089
+    }
+  },
+  "big.json" : {
+    "System.Text" : {
+      "placement" : 1,
+      "score" : 0.16296167166457418
+    },
+    "Utf8Json" : {
+      "placement" : 2,
+      "score" : 0.14395611642995826
+    },
+    "Face" : {
+      "placement" : 3,
+      "score" : 0.1314244263191118
+    },
+    "Newtonsoft" : {
+      "placement" : 4,
+      "score" : 0.06749898329656409
+    }
+  },
+  "huge.json" : {
+    "System.Text" : {
+      "placement" : 1,
+      "score" : 0.0037559205225259746
+    },
+    "Utf8Json" : {
+      "placement" : 2,
+      "score" : 0.003311003823216115
+    },
+    "Face" : {
+      "placement" : 3,
+      "score" : 0.002220586883348574
+    },
+    "Newtonsoft" : {
+      "placement" : 4,
+      "score" : 0.00141845504769853
+    }
+  },
+  "enormous.json" : {
+    "System.Text" : {
+      "placement" : 1,
+      "score" : 0.0002400078261751959
+    },
+    "Utf8Json" : {
+      "placement" : 2,
+      "score" : 0.00021178600557467358
+    },
+    "Face" : {
+      "placement" : 3,
+      "score" : 9.466781810502709E-05
+    },
+    "Newtonsoft" : {
+      "placement" : 4,
+      "score" : 6.330035104412379E-05
+    }
+  },
+  "fail-truE.json" : {
+    
+  },
+  "fail-array.json" : {
+    
+  },
+  "fail-object.json" : {
+    
+  },
+  "fail-object2.json" : {
+    
+  },
+  "fail-innerexception.json" : {
+    "Utf8Json" : {
+      "placement" : 1,
+      "score" : 606.5708329825524
+    }
+  },
+  "fail-deep.json" : {
+    
+  }
+}

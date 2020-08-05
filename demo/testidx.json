@@ -3,110 +3,89 @@
 [
   {
     filename: "appsettings.json",
-    iterations: 10000,
   },
   {
     filename: "demo/testjson/onestring.json",
-    iterations: 10000,
     remark: "one long string"
   },
   {
     filename: "demo/testjson/manystrings.json",
-    iterations: 10000,
     remark: "many short strings" 
   },
   {
     filename: "demo/testjson/justnums.json",
-    iterations: 10000,
     remark: "flat int array" 
   },
   {
     filename: "demo/testjson/floats.json",
-    iterations: 10000,
     remark: "flat float array"
   },
   {
     filename: "demo/testjson/arrays.json",
-    iterations: 10000,
     remark: "array of empty arrays"
   },
   {
     filename: "demo/testjson/objects.json",
-    iterations: 10000,
     remark: "array of empty objects"
   },
   {
     filename: "demo/testjson/objects2.json",
-    iterations: 10000,
     remark: "array of small objects"
   },
   {
     filename: "demo/testjson/mixed.json",
-    iterations: 10000,
     remark: "flat mixed array"
   },
   {
     filename: "demo/testjson/whitespace.json",
-    iterations: 10000,
     remark: "much whitespace"
   },
   {
     filename: "demo/testjson/test-notc.json",
-    iterations: 10000,
     remark: "generic data"
   },
 //  {
 //    filename: "demo/testjson/test.json",
-//    iterations: 10000,
 //    remark: "generic data (trailing commas)"
 //  },
   
-//  {
-//    filename: "demo/big.json",
-//    iterations: 50,
-//    remark: "generated test data"
-//  },
-//  {
-//    filename: "demo/huge.json",
-//    iterations: 10,
-//    remark: "github event log"
-//  },
-//  {
-//    filename: "demo/enormous.json",
-//    iterations: 5,
-//    remark: "street data"
-//  },
+  {
+    filename: "demo/big.json",
+    remark: "generated test data"
+  },
+  {
+    filename: "demo/huge.json",
+    remark: "github event log"
+  },
+  {
+    filename: "demo/enormous.json",
+    remark: "street data"
+  },
 
 // errors
 
   {
     filename: "demo/testjson/fail-truE.json",
-    iterations: 1,
     remark: "\"truE\""
   },
   {
     filename: "demo/testjson/fail-array.json",
-    iterations: 1,
     remark: "unclosed array"
   },
   {
     filename: "demo/testjson/fail-object.json",
-    iterations: 1,
     remark: "bad object"
   },
   {
     filename: "demo/testjson/fail-object2.json",
-    iterations: 1,
     remark: "extra '\"'"
   },
   {
     filename: "demo/testjson/fail-innerexception.json",
-    iterations: 1,
     remark: "non-ParseError base"
   },
   {
     filename: "demo/testjson/fail-deep.json",
-    iterations: 1,
     remark: "nested error"
   }
 ]
