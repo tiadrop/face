@@ -36,7 +36,7 @@ public static class JsonDemo {
 		Console.WriteLine($"[json demo] {users[1].Name} verified: {users[1].Verified}");
 
 		Console.WriteLine(
-			$"[json demo] Extract strings: {new JsValue(jsobj["hello"].ArrayValue.Where(j => j.DataType == JsValue.Type.String).ToArray()).ToJson()}");
+			$"[json demo] Extract strings: {new JsValue(jsobj["hello"].ArrayValue.Where(j => j.Type == JsValue.DataType.String).ToArray()).ToJson()}");
 
 		Dictionary<string, JsValue> dictionary = new Dictionary<string, JsValue> {
 			["store_id"] = "C555",

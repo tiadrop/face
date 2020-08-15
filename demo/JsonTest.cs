@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Threading;
 using Lantern.Face.Json;
 
 namespace face.demo {
@@ -10,18 +11,19 @@ namespace face.demo {
         public static void Run() {
             
             var bm = new Benchmarker("JSON");
-            if (File.Exists("benchmarkStandard.json"))
-                bm.PreviousData = JsValue.FromJson(File.ReadAllText("benchmarkStandard.json"));
+            if (File.Exists(compareDataFilename))
+                bm.PreviousData = JsValue.FromJson(File.ReadAllText(compareDataFilename));
             
-            bm.TimeLimitMs = 3200;
-            bm.Participants["Face"] = data => JsValue.FromJson(data as string);
+            bm.TimeLimitMs =  3000;
             bm.Participants["Utf8Json"] = data => Utf8Json.JsonSerializer.Deserialize<object>(data as string);
             bm.Participants["System.Text"] = data => System.Text.Json.JsonSerializer.Deserialize<object>(data as string);
             bm.Participants["Newtonsoft"] = data => Newtonsoft.Json.JsonConvert.DeserializeObject<object>(data as string);
+            bm.Participants["Face.Json"] = data => JsValue.FromJson(data as string);
             
             bm.Tests.Add("hardcoded_example", new Benchmarker.Test {
                 Remark = "basic example test",
-                Action = run => run("[4,6,8]")
+                Action = (run, data) => run("[2, 4,6, 8, null, 3.142]") // called for each bm.Participants["..."] as run, data is from Setup:
+                // Setup: () => "eg data" // called once per Test before iterating participants
             });
 
             // load the rest from testidx.json
@@ -31,23 +33,58 @@ namespace face.demo {
                     Console.WriteLine($"Missing test source '{testSpec["filename"]}'");
                     continue;
                 }
-                string json = testSpec.ContainsKey("filename")
-                    ? File.ReadAllText(testSpec["filename"])
-                    : testSpec["json"].StringValue;
-                string testRef = testSpec.ContainsKey("filename")
-                    ? testSpec["filename"].StringValue.Split("/").Last()
-                    : testSpec["ref"].StringValue;
+
+                Func<object> setup;
+                string testRef;
+                string remark; 
+
+                if (testSpec.IsString) {
+                    var displayJson = testSpec.StringValue.Replace("\n", "␊").Replace("\r", "");
+                    if (displayJson.Length > 24) displayJson = displayJson.Substring(0, 21) + "...";
+                    remark = $"{formatFileSize(testSpec.StringValue.Length)} ━ '{displayJson}'";
+                    setup = () => testSpec.StringValue;
+                    testRef = testSpec.StringValue;
+
+                } else if (testSpec.ContainsKey("filename")) {
+                    string filename = testSpec["filename"];
+                    var length = new FileInfo(filename).Length;
+                    testRef = testSpec["filename"].StringValue.Split("/").Last();
+                    setup = () => File.ReadAllText(filename);
+                    remark = $"{formatFileSize(length)} ━ {testSpec.PropertyValueOr("remark", testRef)}";
+                    
+                } else {
+                    string json = testSpec["json"];
+                    var md5 = System.Security.Cryptography.MD5.Create();
+                    testRef = string.Join("", md5.ComputeHash(System.Text.Encoding.UTF8.GetBytes(json)).Select(b => $"{b:X}"));
+                    setup = () => json;
+                    var displayJson = json.Replace("\n", "␊").Replace("\r", "");
+                    if (displayJson.Length > 24) displayJson = displayJson.Substring(0, 21) + "...";
+                    remark =
+                        $"{formatFileSize(json.Length)} ━ {testSpec.PropertyValueOr("remark", testRef.Substring(0, 6))} ━ '{displayJson}'";
+                }
                 bm.Tests[testRef] = new Benchmarker.Test {
-                    Remark = $"{formatFileSize(json.Length)} ━ {testSpec.PropertyValueOr("remark", testRef)}",
-                    Action = run => run(json)
+                    Remark = remark,
+                    //Action = (run, data) => run(data), // this is now the default action
+                    Setup = setup // result passed to Action as data
                 };
             }
 
-            bm.Run();
-            File.WriteAllText("benchmarkStandard.json", bm.PreviousData.ToJson(true));
+            File.WriteAllText(logFilename, "");
+            Thread.Sleep(1000);
+            bm.Run((s, col) => {
+                Console.ForegroundColor = col;
+                Console.Write(s);
+                var writer = File.AppendText(logFilename);
+                writer.WriteAsync(s);
+                writer.Close();
+            });
+            File.WriteAllText(compareDataFilename, bm.PreviousData.ToJson(true));
         }
 
-        private static string formatFileSize(int size) {
+        private const string logFilename = "jsonbenchmark.log";
+        private const string compareDataFilename = "benchmarkStandard.json";
+
+        private static string formatFileSize(long size) {
             string unit = "b";
             double newSize = Convert.ToDouble(size);
             if (newSize > 1024) {
@@ -81,17 +118,16 @@ namespace face.demo {
                 basename += " " + (content.Length > 32 ? content.Substring(0, 32) + "..." : content);
                 var expectSuccess = basename[0] == 'y';
                 var expectFailure = basename[0] == 'n';
-                //Console.WriteLine($"Parsing {basename}");
+                
                 try {
                     JsValue.FromJson(content);
                 } catch (Exception e) {
                     if (expectSuccess) {
-                        Console.WriteLine("** FAILED ** - " + basename + " - " + Benchmarker.RenderException(e));
-                        //Console.WriteLine(content);
+                        Console.WriteLine("** FAILED ** - " + basename + " - " + RenderException(e));
                     } else if (expectFailure) {
-                        if(showPass) Console.WriteLine("Pass (expected error) - " + basename + " - " + Benchmarker.RenderException(e));
+                        if(showPass) Console.WriteLine("Pass (expected error) - " + basename + " - " + RenderException(e));
                     } else {
-                        if(showPass) Console.WriteLine("Pass (optional, thrown) - " + basename + " - " + Benchmarker.RenderException(e));
+                        if(showPass) Console.WriteLine("Pass (optional, thrown) - " + basename + " - " + RenderException(e));
                     }
                     continue;
                 }
@@ -105,46 +141,21 @@ namespace face.demo {
                     if(showPass) Console.WriteLine("Pass (optional) - " + basename);
                 }
             }
-
         }
-         
-         private static void fail(string desc, string reason) {
-             Console.WriteLine("FAILED: " + desc);
-             Console.WriteLine("- " + reason);
-         }
+        
+        public static string RenderException(Exception e) {
+            List<string> result = new List<string>{$"{e.GetType().Name}: {e.Message}"};
+            while (e.InnerException != null) {
+                e = e.InnerException;
+                result.Add($"{e.GetType().Name}: {e.Message}");
+            }
+            return string.Join(" ⟶ ", result);
+        }
 
-         private static void pass(string desc, string info = "") {
-             if (info == "") {
-                 Console.WriteLine("pass: " + desc);
-             } else {
-                 Console.WriteLine("pass: " + desc + " -- " + info);
-             }
-         }
-         public static void ExpectException(string desc, Action fn, string expectMessageContains) {
-             try {
-                 fn();
-             } catch (Exception e) {
-                 List<string> messages = new List<string>();
-                 while (true) {
-                     messages.Add(e.GetType().Name + ": " + e.Message);
-                     if (e.Message.Contains(expectMessageContains)) {
-                         pass(desc, string.Join(" >> ", messages));
-                         return;
-                     }
-                     e = e.InnerException;
-                     if (e == null) break;
-                 }
-                
-                 fail(desc, "Unexpected exception: " + string.Join(" >> ", messages));
-                 return;
-             }
-             fail(desc, "No exception thrown");
-         }
+        private static void assert(bool cond, string remark) {
+            if(!cond) Console.WriteLine($"** ASSERTION FAILED ** {remark}");
+        } 
 
-         public static void Assert(string desc, bool a) {
-             if (a) pass(desc);
-             else fail(desc, "assertion failed");
-         }
-
+        
     }
 }

@@ -1,131 +1,134 @@
-▎Running benchmark 'JSON' ┃ T >= 3200ms ┃ 05/08/2020
 
-┍━ basic example test:
-┝#1   │ Face        │ 563,884.977/s (-1.99%)
-┝#2   │ Utf8Json    │ 518,434.192/s (+2.05%)
-┝#3   │ Newtonsoft  │ 285,684.420/s (+1.36%)
-┝#4   │ System.Text │ 129,407.120/s (-2.74%)
+▎Running benchmark 'JSON' ┃ T >= 3000ms ┃ 15/08/2020
 
-┍━ 190b ━ appsettings.json:
-┝#1+  │ Utf8Json    │ 287,279.851/s (+5.59%)
-┝#2-  │ Face        │ 277,186.600/s (-2.06%)
-┝#3+  │ System.Text │ 111,802.042/s (+4.79%)
-┝#4-  │ Newtonsoft  │ 111,511.155/s (-3.69%)
+┏━ basic example test:
+┣#1   | Face.Json   | 430,987.520/s
+┣#2   | Utf8Json    | 392,711.654/s
+┣#3   | Newtonsoft  | 202,301.639/s
+┣#4   | System.Text | 126,113.070/s
 
-┍━ 29kb ━ one long string:
-┝#1   │ System.Text │ 34,922.835/s (-0.76%)
-┝#2   │ Face        │ 12,068.028/s (+2.64%)
-┝#3   │ Newtonsoft  │ 10,760.570/s (+4.95%)
-┝#4   │ Utf8Json    │ 10,481.909/s (+5.14%)
+┏━ 190b ━ appsettings.json:
+┣#1   | Face.Json   | 288,605.618/s
+┣#2   | Utf8Json    | 277,877.240/s
+┣#3   | Newtonsoft  | 120,855.276/s
+┣#4   | System.Text | 119,133.559/s
 
-┍━ 27kb ━ many short strings:
-┝#1   │ System.Text │ 1,499.630/s (+0.92%)
-┝#2   │ Utf8Json    │ 1,382.157/s (-0.16%)
-┝#3   │ Face        │ 1,284.652/s (+4.88%)
-┝#4   │ Newtonsoft  │ 619.507/s (+8.33%)
+┏━ 15kb ━ one long string:
+┣#1   | System.Text | 56,000.658/s
+┣#2   | Face.Json   | 22,176.562/s
+┣#3   | Newtonsoft  | 20,995.212/s
+┣#4   | Utf8Json    | 19,150.428/s
 
-┍━ 27kb ━ flat int array:
-┝#1   │ System.Text │ 613.228/s (+1.15%)
-┝#2   │ Utf8Json    │ 367.151/s (-0.53%)
-┝#3   │ Face        │ 344.168/s (+0.75%)
-┝#4   │ Newtonsoft  │ 265.243/s (+10.62%)
+┏━ 6kb ━ many short strings:
+┣#1   | System.Text | 6,310.437/s
+┣#2   | Utf8Json    | 6,145.441/s
+┣#3   | Face.Json   | 5,769.778/s
+┣#4   | Newtonsoft  | 2,758.610/s
 
-┍━ 28kb ━ flat float array:
-┝#1   │ System.Text │ 2,074.716/s (-1.62%)
-┝#2   │ Utf8Json    │ 1,313.878/s (-3.81%)
-┝#3   │ Face        │ 1,126.013/s (+1.42%)
-┝#4   │ Newtonsoft  │ 780.980/s (+8.56%)
+┏━ 6kb ━ flat int array:
+┣#1   | System.Text | 2,666.916/s
+┣#2   | Face.Json   | 1,908.476/s
+┣#3   | Utf8Json    | 1,610.625/s
+┣#4   | Newtonsoft  | 1,268.087/s
 
-┍━ 28kb ━ array of empty arrays:
-┝#1+  │ Utf8Json    │ 877.077/s (+4.65%)
-┝#2-  │ Face        │ 852.284/s (-9.44%)
-┝#3   │ System.Text │ 394.235/s (-0.05%)
-┝#4   │ Newtonsoft  │ 264.209/s (-1.06%)
+┏━ 5kb ━ flat float array:
+┣#1   | System.Text | 10,047.781/s
+┣#2   | Utf8Json    | 6,798.768/s
+┣#3   | Face.Json   | 6,036.309/s
+┣#4   | Newtonsoft  | 4,261.262/s
 
-┍━ 27kb ━ array of empty objects:
-┝#1   │ Utf8Json    │ 542.248/s (+2.10%)
-┝#2   │ Face        │ 430.179/s (+1.56%)
-┝#3   │ System.Text │ 399.879/s (+3.10%)
-┝#4   │ Newtonsoft  │ 283.333/s (-1.13%)
+┏━ 9kb ━ array of empty arrays:
+┣#1   | Face.Json   | 4,443.855/s
+┣#2   | Utf8Json    | 3,751.807/s
+┣#3   | System.Text | 1,312.342/s
+┣#4   | Newtonsoft  | 1,043.594/s
 
-┍━ 28kb ━ array of small objects:
-┝#1   │ System.Text │ 561.342/s (+2.97%)
-┝#2   │ Face        │ 536.805/s (+1.24%)
-┝#3   │ Utf8Json    │ 515.178/s (+3.50%)
-┝#4   │ Newtonsoft  │ 219.540/s (-0.33%)
+┏━ 806b ━ array of bools and nulls:
+┣#1   | Utf8Json    | 94,321.764/s
+┣#2   | Face.Json   | 80,631.629/s
+┣#3   | System.Text | 41,897.949/s
+┣#4   | Newtonsoft  | 29,384.852/s
 
-┍━ 8kb ━ flat mixed array:
-┝#1   │ Face        │ 3,562.632/s (+6.69%)
-┝#2+  │ System.Text │ 3,383.097/s (+2.39%)
-┝#3-  │ Utf8Json    │ 3,369.107/s (+1.90%)
-┝#4   │ Newtonsoft  │ 1,611.483/s (+1.03%)
+┏━ 8kb ━ array of empty objects:
+┣#1   | Utf8Json    | 1,977.876/s
+┣#2   | Face.Json   | 1,813.706/s
+┣#3   | System.Text | 1,358.760/s
+┣#4   | Newtonsoft  | 1,028.384/s
 
-┍━ 1001b ━ much whitespace:
-┝#1   │ Face        │ 57,502.996/s (-1.38%)
-┝#2   │ Utf8Json    │ 47,436.352/s (-2.42%)
-┝#3   │ System.Text │ 41,330.276/s (-3.59%)
-┝#4   │ Newtonsoft  │ 38,969.301/s (+4.47%)
+┏━ 7kb ━ array of small objects:
+┣#1   | System.Text | 2,390.025/s
+┣#2   | Utf8Json    | 2,246.551/s
+┣#3   | Face.Json   | 2,027.946/s
+┣#4   | Newtonsoft  | 1,018.152/s
 
-┍━ 330b ━ generic data:
-┝#1+  │ Face        │ 129,795.333/s (+9.19%)
-┝#2-  │ Utf8Json    │ 120,395.087/s (+1.19%)
-┝#3   │ System.Text │ 67,234.662/s (+2.50%)
-┝#4   │ Newtonsoft  │ 45,868.174/s (+2.89%)
+┏━ 8kb ━ flat mixed array:
+┣#1   | Utf8Json    | 3,446.891/s
+┣#2   | System.Text | 3,413.448/s
+┣#3   | Face.Json   | 3,313.765/s
+┣#4   | Newtonsoft  | 1,696.972/s
 
-┍━ 569kb ━ generated test data:
-┝#1   │ System.Text │ 162.962/s (+1.41%)
-┝#2   │ Utf8Json    │ 143.956/s (+5.77%)
-┝#3   │ Face        │ 131.424/s (-1.45%)
-┝#4   │ Newtonsoft  │ 67.499/s (+0.56%)
+┏━ 1001b ━ much whitespace:
+┣#1   | Face.Json   | 61,943.628/s
+┣#2   | Utf8Json    | 50,552.879/s
+┣#3   | System.Text | 44,008.059/s
+┣#4   | Newtonsoft  | 38,067.384/s
 
-┍━ 25mb ━ github event log:
-┝#1   │ System.Text │ 3.756/s (-1.89%)
-┝#2   │ Utf8Json    │ 3.311/s (+1.22%)
-┝#3   │ Face        │ 2.221/s (-1.60%)
-┝#4   │ Newtonsoft  │ 1.418/s (+0.71%)
+┏━ 330b ━ generic data:
+┣#1   | Face.Json   | 124,259.188/s
+┣#2   | Utf8Json    | 123,809.386/s
+┣#3   | System.Text | 68,855.637/s
+┣#4   | Newtonsoft  | 48,300.200/s
 
-┍━ 181mb ━ street data:
-┝#1   │ System.Text │ 0.240/s (-0.55%)
-┝#2   │ Utf8Json    │ 0.212/s (-1.36%)
-┝#3   │ Face        │ 0.095/s (-0.79%)
-┝#4   │ Newtonsoft  │ 0.063/s (-1.91%)
+┏━ 569kb ━ generated test data:
+┣#1   | System.Text | 157.895/s
+┣#2   | Utf8Json    | 138.313/s
+┣#3   | Face.Json   | 131.473/s
+┣#4   | Newtonsoft  | 72.300/s
 
-┍━ 36b ━ "truE":
-┝#N/A | Face        | Lantern.Face.Json.ParseError Expected value, found 'truE' at `[3]`, input position 17 (line 5)
-┝#N/A | Utf8Json    | Utf8Json.JsonParsingException expected:'true', actual:'true', at offset:19
-┝#N/A | System.Text | System.Text.Json.JsonException 'truE,
+┏━ 25mb ━ github event log:
+┣#1   | System.Text | 3.810/s
+┣#2   | Utf8Json    | 3.106/s
+┣#3   | Face.Json   | 2.355/s
+┣#4   | Newtonsoft  | 1.525/s
+
+┏━ 181mb ━ street data:
+┣#1   | System.Text | 0.247/s
+┣#2   | Utf8Json    | 0.219/s
+┣#3   | Face.Json   | 0.096/s
+┣#4   | Newtonsoft  | 0.064/s
+
+┏━ 36b ━ "truE":
+┣#N/A | Utf8Json    | JsonParsingException: expected:'true', actual:'true', at offset:19
+┣#N/A | System.Text | JsonException: 'truE,
   4,
   5,
-]' is an invalid JSON literal. Expected the literal 'true'. Path: $ | LineNumber: 4 | BytePositionInLine: 5.
-┝#N/A | Newtonsoft  | Newtonsoft.Json.JsonReaderException Error parsing boolean value. Path '[2]', line 5, position 5.
+]' is an invalid JSON literal. Expected the literal 'true'. Path: $ | LineNumber: 4 | BytePositionInLine: 5. → JsonReaderException: 'truE,
+  4,
+  5,
+]' is an invalid JSON literal. Expected the literal 'true'. LineNumber: 4 | BytePositionInLine: 5.
+┣#N/A | Newtonsoft  | JsonReaderException: Error parsing boolean value. Path '[2]', line 5, position 5.
+┣#N/A | Face.Json   | ParseError: Expected value, found 'truE' at `[3]`, input position 19 (line 5)
 
-┍━ 19b ━ unclosed array:
-┝#N/A | Face        | Lantern.Face.Json.ParseError Past end of input at `[3][0]`
-┝#N/A | Utf8Json    | System.IndexOutOfRangeException Index was outside the bounds of the array.
-┝#N/A | System.Text | System.Text.Json.JsonException Expected depth to be zero at the end of the JSON payload. There is an open JSON object or array that should be closed. Path: $ | LineNumber: 0 | BytePositionInLine: 19.
-┝#N/A | Newtonsoft  | Newtonsoft.Json.JsonWriterException Unexpected end when reading token. Path '[3]'.
+┏━ 19b ━ unclosed array:
+┣#N/A | Utf8Json    | IndexOutOfRangeException: Index was outside the bounds of the array.
+┣#N/A | System.Text | JsonException: Expected depth to be zero at the end of the JSON payload. There is an open JSON object or array that should be closed. Path: $ | LineNumber: 0 | BytePositionInLine: 19. → JsonReaderException: Expected depth to be zero at the end of the JSON payload. There is an open JSON object or array that should be closed. LineNumber: 0 | BytePositionInLine: 19.
+┣#N/A | Newtonsoft  | JsonWriterException: Unexpected end when reading token. Path '[3]'.
+┣#N/A | Face.Json   | ParseError: Past end of input at `[3][0]`
 
-┍━ 35b ━ bad object:
-┝#N/A | Face        | Lantern.Face.Json.ParseError Unexpected '}' at `hello`, input position 34 (line 4)
-┝#N/A | Utf8Json    | System.InvalidOperationException Invalid Json Token:EndObject
-┝#N/A | System.Text | System.Text.Json.JsonException '}' is an invalid start of a value. Path: $ | LineNumber: 3 | BytePositionInLine: 0.
-┝#N/A | Newtonsoft  | Newtonsoft.Json.JsonReaderException Unexpected character encountered while parsing value: }. Path 'hello', line 4, position 0.
+┏━ 35b ━ bad object:
+┣#N/A | Utf8Json    | InvalidOperationException: Invalid Json Token:EndObject
+┣#N/A | System.Text | JsonException: '}' is an invalid start of a value. Path: $ | LineNumber: 3 | BytePositionInLine: 0. → JsonReaderException: '}' is an invalid start of a value. LineNumber: 3 | BytePositionInLine: 0.
+┣#N/A | Newtonsoft  | JsonReaderException: Unexpected character encountered while parsing value: }. Path 'hello', line 4, position 0.
+┣#N/A | Face.Json   | ParseError: Expected value, past end of input at `hello`
 
-┍━ 20b ━ extra '"':
-┝#N/A | Face        | Lantern.Face.Json.ParseError Expected ',' or '}' following value, found '"' at `name`, input position 17 (line 2)
-┝#N/A | Utf8Json    | Utf8Json.JsonParsingException expected:',', actual:'"', at offset:17
-┝#N/A | System.Text | System.Text.Json.JsonException '"' is invalid after a value. Expected either ',', '}', or ']'. Path: $ | LineNumber: 1 | BytePositionInLine: 15.
-┝#N/A | Newtonsoft  | Newtonsoft.Json.JsonReaderException After parsing a value an unexpected character was encountered: ". Path 'name', line 2, position 15.
+┏━ 20b ━ extra '"':
+┣#N/A | Utf8Json    | JsonParsingException: expected:',', actual:'"', at offset:17
+┣#N/A | System.Text | JsonException: '"' is invalid after a value. Expected either ',', '}', or ']'. Path: $ | LineNumber: 1 | BytePositionInLine: 15. → JsonReaderException: '"' is invalid after a value. Expected either ',', '}', or ']'. LineNumber: 1 | BytePositionInLine: 15.
+┣#N/A | Newtonsoft  | JsonReaderException: After parsing a value an unexpected character was encountered: ". Path 'name', line 2, position 15.
+┣#N/A | Face.Json   | ParseError: Expected ',' or '}' following value, found '"' at `name`, input position 17 (line 2)
 
-┍━ 14b ━ non-ParseError base:
-┝#1   │ Utf8Json    │ 606,570.833/s (+0.83%)
-┝#N/A | Face        | Lantern.Face.Json.ParseError Failed to parse number at `[2]`, input position 13
-┝#N/A | System.Text | System.Text.Json.JsonException ']' is invalid within a number, immediately after a sign character ('+' or '-'). Expected a digit ('0'-'9'). Path: $ | LineNumber: 0 | BytePositionInLine: 13.
-┝#N/A | Newtonsoft  | Newtonsoft.Json.JsonReaderException Input string '0e' is not a valid number. Path '[2]', line 1, position 13.
-
-┍━ 194b ━ nested error:
-┝#N/A | Face        | Lantern.Face.Json.ParseError Invalid \u sequence '4' at `things[1].polygon[1]{"bad y"}`, input position 161 (line 12)
-┝#N/A | Utf8Json    | Utf8Json.JsonParsingException Invalid Character"
-┝#N/A | System.Text | System.Text.Json.JsonException '"' is not a hex digit following '\u' within a JSON string. The string should be correctly escaped. Path: $ | LineNumber: 11 | BytePositionInLine: 26.
-┝#N/A | Newtonsoft  | Newtonsoft.Json.JsonReaderException Invalid Unicode escape sequence: \u4"
- . Path 'things[1].polygon[1]['bad y']', line 12, position 25.
+┏━ 199b ━ nested error:
+┣#N/A | Utf8Json    | JsonParsingException: Invalid Characterz
+┣#N/A | System.Text | JsonException: 'z' is not a hex digit following '\u' within a JSON string. The string should be correctly escaped. Path: $ | LineNumber: 11 | BytePositionInLine: 28. → JsonReaderException: 'z' is not a hex digit following '\u' within a JSON string. The string should be correctly escaped. LineNumber: 11 | BytePositionInLine: 28.
+┣#N/A | Newtonsoft  | JsonReaderException: Invalid Unicode escape sequence: \u123z. Path 'things[1].polygon[1]['bad y']', line 12, position 25.
+┣#N/A | Face.Json   | ParseError: Invalid \u sequence '123z' at `things[1].polygon[1]{"bad y"}`, input position 161 (line 12)

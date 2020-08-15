@@ -75,7 +75,7 @@ namespace Lantern.Face.Json {
                 var result = parser.readValue();
                 parser.NextToken(true); // bring us hopefully to end of input
                 if (parser.position < parser.length)
-                    throw new ParseError($"Unexpected '{parser.current}'", parser.position);
+                    throw new ParseError($"Unexpected '{parser.getSymbol()}'", parser.position);
                 return result;
             } catch (ParseError e) {
                 throw e.Consolidate(parser);
@@ -130,6 +130,15 @@ namespace Lantern.Face.Json {
             }
         }
 
+        static readonly Regex symbolRegex = new Regex("\\G\\w{1,16}"); 
+        private string getSymbol() {
+            var match = symbolRegex.Match(input, position);
+            if (!match.Success) return current.ToString();
+            var symbol = symbolRegex.Match(input, position).Value;
+            if (symbol.Length > 16) symbol = symbol.Substring(0, 16) + "...";
+            return symbol;
+        }
+
         /// <summary>
         /// Returns a human-readable reference to an input position for use in error messages.
         /// If input contains multiple lines the position's line number is included in the description.
@@ -159,41 +168,36 @@ namespace Lantern.Face.Json {
 
             if (isNumeric(c)) return readNumber();
 
-            try {
-                string nextFour = input[position .. (Math.Min(position + 4, length))];
-                switch (nextFour) {
-                    case "null":
-                        position += 3;
-                        return JsValue.Null;
-                    case "true":
-                        position += 3;
-                        return true;
-                    case "fals" when input[position + 4] == 'e':
-                        position += 4;
-                        return false;
-                    default:
-                        var key = readKeyRelaxed();
-                        throw new ParseError($"Expected value, found '{shortenKey(key)}'", position - key.Length - 1);
-                }
-            } catch (IndexOutOfRangeException) {
-                throw new ParseError("Expected value, past end of input");
-            } catch (ArgumentOutOfRangeException) {
-                throw new ParseError("Expected value, past end of input");
+            if(position > length - 4) throw new ParseError("Expected value, past end of input");
+            string nextThree = input[(position + 1) .. (Math.Min(position + 4, length))];
+            switch (nextThree) {
+                case "ull" when c == 'n':
+                    if (length > position + 4 && char.IsLetterOrDigit(input[position + 4])) break;
+                    position += 3;
+                    return JsValue.Null;
+                case "rue" when c == 't':
+                    if (length > position + 4 && char.IsLetterOrDigit(input[position + 4])) break;
+                    position += 3;
+                    return true;
+                case "als" when c == 'f' && position < length - 4 && input[position + 4] == 'e':
+                    if (length > position + 5 && char.IsLetterOrDigit(input[position + 5])) break;
+                    position += 4;
+                    return false;
             }
+            throw new ParseError($"Expected value, found '{getSymbol()}'", position);
         }
 
         private double readNumber() {
-            int lengthFound = 1; // we already know (from readValue()) that current is numeric
+            int start = position;
             while (position < length - 1 && isNumeric(input[position + 1])) {
                 position++;
-                lengthFound++;
             }
 
-            string numberString = input[(position + 1 - lengthFound) .. (position + 1)];
+            string numberString = input[start .. (position + 1)];
             try {
                 return double.Parse(numberString);
             } catch (Exception e) {
-                throw new ParseError( "Failed to parse number", e, position + 1);
+                throw new ParseError( "Failed to parse number", e, start);
             }
         }
         
@@ -219,12 +223,11 @@ namespace Lantern.Face.Json {
         private string readEscapedCodepointChar() {
             int codepoint = readEscapedCodepoint();
             if (codepoint >= highSurrogateStart && codepoint <= 57343) {
-                try {
-                    if (input[position + 1] != '\\' || input[position + 2] != 'u') {
-                        throw new ParseError($"Expected low surrogate, found '{current}'", position);
-                    }
-                } catch (ArgumentOutOfRangeException) {
+                if (position < length - 3) {
                     throw new ParseError("Expected low surrogate \\u sequence, past end of input", position);
+                }
+                if (input[position + 1] != '\\' || input[position + 2] != 'u') {
+                    throw new ParseError($"Expected low surrogate, found '{getSymbol()}'", position);
                 }
 
                 position += 2; // skip \u
@@ -259,8 +262,8 @@ namespace Lantern.Face.Json {
                 throw new ParseError("Past end of input while reading \\u sequence", position - 3);
             } catch (FormatException) {
                 position -= 3;
-                var capture = new Regex(".\\w*").Match(input, position, Math.Min(4, length - position));
-                throw new ParseError($"Invalid \\u sequence '{capture}'", position);
+                Regex fourAlphaNum = new Regex(@"\w{1,4}|.");
+                throw new ParseError($"Invalid \\u sequence '{fourAlphaNum.Match(input, position).Value}'", position);
             }
         }
         
@@ -269,7 +272,7 @@ namespace Lantern.Face.Json {
         private string readKeyRelaxed() {
             var match = unquotedKeyRegex.Match(input, position);
             if (!match.Success)
-                throw new ParseError($"Unexpected '{current}'", position);
+                throw new ParseError($"Unexpected '{getSymbol()}'", position);
             position += match.Value.Length - 1;
             return match.Value;
         }
@@ -282,11 +285,11 @@ namespace Lantern.Face.Json {
         private JsValue readString() {
             var startPosition = position;
             position++; // skip first "
+            if(position == length) throw new ParseError("Unclosed string", startPosition);
 
             var sb = new StringBuilder();
             bool escaping = false;
             int literalLength = 0;
-            if(position == length) throw new ParseError("Unclosed string", startPosition);
             while(escaping || current != '"'){
                 if(escaping){
                     escaping = false;
@@ -307,6 +310,7 @@ namespace Lantern.Face.Json {
                         throw;
                     } catch (Exception e) {
                         // may be able to remove this catch (therefore the try) without effect;
+                        // update:  removing the try slows this method down a lot
                         throw new ParseError("Failed to parse string", e, startPosition);
                     }
                 } else if(current == '\\'){
@@ -349,7 +353,7 @@ namespace Lantern.Face.Json {
                         case ',':
                             found.Add(value);
                             continue;
-                        default: throw new ParseError($"Expected ',' or ']', found '{current}'", position - 1);
+                        default: throw new ParseError($"Expected ',' or ']', found '{getSymbol()}'", position);
                     }
                 }
             } catch (ParseError e) {
@@ -358,7 +362,7 @@ namespace Lantern.Face.Json {
         }
         
         /// <summary>
-        /// Shortens strings to a maximum length for inclusion in exception messages.
+        /// Shortens a string to a maximum length for inclusion in exception messag`es.
         /// </summary>
         /// <param name="k"></param>
         /// <returns>Shortened key</returns>
@@ -383,7 +387,7 @@ namespace Lantern.Face.Json {
                             break;
                         default: 
                             if(!relaxed) throw new ParseError(
-                            $"Expected '\"', found '{current}'", position);
+                            $"Expected '\"', found '{getSymbol()}'", position);
                             keyValue = readKeyRelaxed();
                             break;
                     }
@@ -397,7 +401,7 @@ namespace Lantern.Face.Json {
                     NextToken(); // move to :
                     if (current != ':')
                         throw new ParseError(
-                            $"Expected ':' following property name, found '{current}'", position);
+                            $"Expected ':' following property name, found '{getSymbol()}'", position);
 
                     NextToken(); // move to value
 
@@ -411,7 +415,7 @@ namespace Lantern.Face.Json {
                     case ',': continue;
                     default:
                         throw new ParseError(
-                            $"Expected ',' or '}}' following value, found '{current}'", position);
+                            $"Expected ',' or '}}' following value, found '{getSymbol()}'", position);
                     }
                 } catch (Exception e) { // surely EOT
                     throw new ParseError(e, FormatObjectPathComponent(keyValue));

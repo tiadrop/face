@@ -25,6 +25,10 @@
     remark: "array of empty arrays"
   },
   {
+    filename: "demo/testjson/specials.json",
+    remark: "array of bools and nulls"
+  },
+  {
     filename: "demo/testjson/objects.json",
     remark: "array of empty objects"
   },
@@ -49,18 +53,18 @@
 //    remark: "generic data (trailing commas)"
 //  },
   
-  {
-    filename: "demo/big.json",
-    remark: "generated test data"
-  },
-  {
-    filename: "demo/huge.json",
-    remark: "github event log"
-  },
-  {
-    filename: "demo/enormous.json",
-    remark: "street data"
-  },
+//  {
+//    filename: "demo/big.json",
+//    remark: "generated test data"
+//  },
+  //{
+//    filename: "demo/huge.json",
+//    remark: "github event log"
+//  },
+//  {
+//    filename: "demo/enormous.json",
+//    remark: "street data"
+//  },
 
 // errors
 
@@ -79,10 +83,6 @@
   {
     filename: "demo/testjson/fail-object2.json",
     remark: "extra '\"'"
-  },
-  {
-    filename: "demo/testjson/fail-innerexception.json",
-    remark: "non-ParseError base"
   },
   {
     filename: "demo/testjson/fail-deep.json",
