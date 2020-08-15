@@ -168,7 +168,6 @@ namespace Lantern.Face.Json {
 
             if (isNumeric(c)) return readNumber();
 
-            if(position > length - 4) throw new ParseError("Expected value, past end of input");
             string nextThree = input[(position + 1) .. (Math.Min(position + 4, length))];
             switch (nextThree) {
                 case "ull" when c == 'n':

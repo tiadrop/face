@@ -2,99 +2,99 @@
 ▎Running benchmark 'JSON' ┃ T >= 3000ms ┃ 15/08/2020
 
 ┏━ basic example test:
-┣#1   | Face.Json   | 430,987.520/s
-┣#2   | Utf8Json    | 392,711.654/s
-┣#3   | Newtonsoft  | 202,301.639/s
-┣#4   | System.Text | 126,113.070/s
+┣#1   | Face.Json   | 408,109.959/s
+┣#2   | Utf8Json    | 399,218.530/s
+┣#3   | Newtonsoft  | 194,426.307/s
+┣#4   | System.Text | 128,526.430/s
 
 ┏━ 190b ━ appsettings.json:
-┣#1   | Face.Json   | 288,605.618/s
-┣#2   | Utf8Json    | 277,877.240/s
-┣#3   | Newtonsoft  | 120,855.276/s
-┣#4   | System.Text | 119,133.559/s
+┣#1   | Face.Json   | 289,893.613/s
+┣#2   | Utf8Json    | 275,220.612/s
+┣#3   | System.Text | 117,612.573/s
+┣#4   | Newtonsoft  | 111,447.680/s
 
 ┏━ 15kb ━ one long string:
-┣#1   | System.Text | 56,000.658/s
-┣#2   | Face.Json   | 22,176.562/s
-┣#3   | Newtonsoft  | 20,995.212/s
-┣#4   | Utf8Json    | 19,150.428/s
+┣#1   | System.Text | 56,423.093/s
+┣#2   | Face.Json   | 21,538.411/s
+┣#3   | Newtonsoft  | 20,089.763/s
+┣#4   | Utf8Json    | 19,072.320/s
 
 ┏━ 6kb ━ many short strings:
-┣#1   | System.Text | 6,310.437/s
-┣#2   | Utf8Json    | 6,145.441/s
-┣#3   | Face.Json   | 5,769.778/s
-┣#4   | Newtonsoft  | 2,758.610/s
+┣#1   | System.Text | 6,307.003/s
+┣#2   | Utf8Json    | 5,867.397/s
+┣#3   | Face.Json   | 5,426.246/s
+┣#4   | Newtonsoft  | 2,745.834/s
 
 ┏━ 6kb ━ flat int array:
-┣#1   | System.Text | 2,666.916/s
-┣#2   | Face.Json   | 1,908.476/s
-┣#3   | Utf8Json    | 1,610.625/s
-┣#4   | Newtonsoft  | 1,268.087/s
+┣#1   | System.Text | 2,659.854/s
+┣#2   | Face.Json   | 1,641.816/s
+┣#3   | Utf8Json    | 1,610.169/s
+┣#4   | Newtonsoft  | 1,257.173/s
 
 ┏━ 5kb ━ flat float array:
-┣#1   | System.Text | 10,047.781/s
-┣#2   | Utf8Json    | 6,798.768/s
-┣#3   | Face.Json   | 6,036.309/s
-┣#4   | Newtonsoft  | 4,261.262/s
+┣#1   | System.Text | 10,299.430/s
+┣#2   | Utf8Json    | 6,945.743/s
+┣#3   | Face.Json   | 5,545.503/s
+┣#4   | Newtonsoft  | 4,040.788/s
 
 ┏━ 9kb ━ array of empty arrays:
-┣#1   | Face.Json   | 4,443.855/s
-┣#2   | Utf8Json    | 3,751.807/s
-┣#3   | System.Text | 1,312.342/s
-┣#4   | Newtonsoft  | 1,043.594/s
+┣#1   | Face.Json   | 4,441.534/s
+┣#2   | Utf8Json    | 3,720.493/s
+┣#3   | System.Text | 1,310.866/s
+┣#4   | Newtonsoft  | 901.623/s
 
 ┏━ 806b ━ array of bools and nulls:
-┣#1   | Utf8Json    | 94,321.764/s
-┣#2   | Face.Json   | 80,631.629/s
-┣#3   | System.Text | 41,897.949/s
-┣#4   | Newtonsoft  | 29,384.852/s
+┣#1   | Utf8Json    | 92,556.593/s
+┣#2   | Face.Json   | 63,042.840/s
+┣#3   | System.Text | 42,933.158/s
+┣#4   | Newtonsoft  | 28,144.270/s
 
 ┏━ 8kb ━ array of empty objects:
-┣#1   | Utf8Json    | 1,977.876/s
-┣#2   | Face.Json   | 1,813.706/s
-┣#3   | System.Text | 1,358.760/s
-┣#4   | Newtonsoft  | 1,028.384/s
+┣#1   | Utf8Json    | 2,051.204/s
+┣#2   | Face.Json   | 1,668.617/s
+┣#3   | System.Text | 1,386.351/s
+┣#4   | Newtonsoft  | 916.296/s
 
 ┏━ 7kb ━ array of small objects:
-┣#1   | System.Text | 2,390.025/s
-┣#2   | Utf8Json    | 2,246.551/s
-┣#3   | Face.Json   | 2,027.946/s
-┣#4   | Newtonsoft  | 1,018.152/s
+┣#1   | System.Text | 2,366.278/s
+┣#2   | Utf8Json    | 2,197.316/s
+┣#3   | Face.Json   | 1,941.261/s
+┣#4   | Newtonsoft  | 904.370/s
 
 ┏━ 8kb ━ flat mixed array:
-┣#1   | Utf8Json    | 3,446.891/s
-┣#2   | System.Text | 3,413.448/s
-┣#3   | Face.Json   | 3,313.765/s
-┣#4   | Newtonsoft  | 1,696.972/s
+┣#1   | Utf8Json    | 3,618.991/s
+┣#2   | System.Text | 3,467.872/s
+┣#3   | Face.Json   | 3,072.280/s
+┣#4   | Newtonsoft  | 1,601.268/s
 
 ┏━ 1001b ━ much whitespace:
-┣#1   | Face.Json   | 61,943.628/s
-┣#2   | Utf8Json    | 50,552.879/s
-┣#3   | System.Text | 44,008.059/s
-┣#4   | Newtonsoft  | 38,067.384/s
+┣#1   | Face.Json   | 52,616.888/s
+┣#2   | Utf8Json    | 50,592.229/s
+┣#3   | System.Text | 44,699.026/s
+┣#4   | Newtonsoft  | 37,707.601/s
 
 ┏━ 330b ━ generic data:
-┣#1   | Face.Json   | 124,259.188/s
-┣#2   | Utf8Json    | 123,809.386/s
-┣#3   | System.Text | 68,855.637/s
-┣#4   | Newtonsoft  | 48,300.200/s
+┣#1   | Utf8Json    | 123,796.580/s
+┣#2   | Face.Json   | 122,537.792/s
+┣#3   | System.Text | 70,223.184/s
+┣#4   | Newtonsoft  | 44,473.527/s
 
 ┏━ 569kb ━ generated test data:
-┣#1   | System.Text | 157.895/s
-┣#2   | Utf8Json    | 138.313/s
-┣#3   | Face.Json   | 131.473/s
-┣#4   | Newtonsoft  | 72.300/s
+┣#1   | System.Text | 155.957/s
+┣#2   | Utf8Json    | 139.495/s
+┣#3   | Face.Json   | 135.642/s
+┣#4   | Newtonsoft  | 67.626/s
 
 ┏━ 25mb ━ github event log:
-┣#1   | System.Text | 3.810/s
-┣#2   | Utf8Json    | 3.106/s
-┣#3   | Face.Json   | 2.355/s
-┣#4   | Newtonsoft  | 1.525/s
+┣#1   | System.Text | 3.827/s
+┣#2   | Utf8Json    | 3.182/s
+┣#3   | Face.Json   | 2.069/s
+┣#4   | Newtonsoft  | 1.407/s
 
 ┏━ 181mb ━ street data:
 ┣#1   | System.Text | 0.247/s
-┣#2   | Utf8Json    | 0.219/s
-┣#3   | Face.Json   | 0.096/s
+┣#2   | Utf8Json    | 0.230/s
+┣#3   | Face.Json   | 0.091/s
 ┣#4   | Newtonsoft  | 0.064/s
 
 ┏━ 36b ━ "truE":
@@ -119,7 +119,7 @@
 ┣#N/A | Utf8Json    | InvalidOperationException: Invalid Json Token:EndObject
 ┣#N/A | System.Text | JsonException: '}' is an invalid start of a value. Path: $ | LineNumber: 3 | BytePositionInLine: 0. → JsonReaderException: '}' is an invalid start of a value. LineNumber: 3 | BytePositionInLine: 0.
 ┣#N/A | Newtonsoft  | JsonReaderException: Unexpected character encountered while parsing value: }. Path 'hello', line 4, position 0.
-┣#N/A | Face.Json   | ParseError: Expected value, past end of input at `hello`
+┣#N/A | Face.Json   | ParseError: Expected value, found '}' at `hello`, input position 34 (line 4)
 
 ┏━ 20b ━ extra '"':
 ┣#N/A | Utf8Json    | JsonParsingException: expected:',', actual:'"', at offset:17
