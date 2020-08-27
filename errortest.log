@@ -1,0 +1,92 @@
+
+▎Running benchmark 'JSON Errors' ┃ 27/08/2020
+
+┏━ 10b ━ double , ━ '[4,7,9,,2]':
+┣#1   | Newtonsoft  | 243,536.046/s
+┣#N/A | Utf8Json    | InvalidOperationException: Invalid Json Token:ValueSeparator
+┣#N/A | System.Text | JsonException: ',' is an invalid start of a value. Path: $ | LineNumber: 0 | BytePositionInLine: 7. → JsonReaderException: ',' is an invalid start of a value. LineNumber: 0 | BytePositionInLine: 7.
+┣#N/A | Face.Json   | ParseError: Expected value, found ',' at `[3]`, input position 7
+
+┏━ 8b ━ no open ━ '5,4,3,2]':
+┣#1   | Utf8Json    | 736,946.761/s
+┣#N/A | System.Text | JsonException: ',' is invalid after a single JSON value. Expected end of data. Path: $ | LineNumber: 0 | BytePositionInLine: 1. → JsonReaderException: ',' is invalid after a single JSON value. Expected end of data. LineNumber: 0 | BytePositionInLine: 1.
+┣#N/A | Newtonsoft  | JsonReaderException: Additional text encountered after finished reading JSON content: ,. Path '', line 1, position 1.
+┣#N/A | Face.Json   | ParseError: Unexpected ',' at input position 1
+
+┏━ 14b ━ wrong brackets [] ━ '["bananas": 6]':
+┣#N/A | Utf8Json    | JsonParsingException: expected:',', actual:':', at offset:10
+┣#N/A | System.Text | JsonException: ':' is invalid after a value. Expected either ',', '}', or ']'. Path: $ | LineNumber: 0 | BytePositionInLine: 10. → JsonReaderException: ':' is invalid after a value. Expected either ',', '}', or ']'. LineNumber: 0 | BytePositionInLine: 10.
+┣#N/A | Newtonsoft  | JsonReaderException: After parsing a value an unexpected character was encountered: :. Path '[0]', line 1, position 10.
+┣#N/A | Face.Json   | ParseError: Expected ',' or ']', found ':' at `[0]`, input position 10
+
+┏━ 12b ━ wrong brackets {} ━ '{5, true, 6}':
+┣#N/A | Utf8Json    | JsonParsingException: expected:'String Begin Token', actual:'5', at offset:1
+┣#N/A | System.Text | JsonException: '5' is an invalid start of a property name. Expected a '"'. Path: $ | LineNumber: 0 | BytePositionInLine: 1. → JsonReaderException: '5' is an invalid start of a property name. Expected a '"'. LineNumber: 0 | BytePositionInLine: 1.
+┣#N/A | Newtonsoft  | JsonReaderException: Invalid JavaScript property identifier character: ,. Path '', line 1, position 2.
+┣#N/A | Face.Json   | ParseError: Expected '"', found '5' at `{key 0}`, input position 1
+
+┏━ 13b ━ multi-line ━ '[␊8,␊7,␊4␊3␊]':
+┣#N/A | Utf8Json    | JsonParsingException: expected:',', actual:'3', at offset:10
+┣#N/A | System.Text | JsonException: '3' is invalid after a value. Expected either ',', '}', or ']'. Path: $ | LineNumber: 4 | BytePositionInLine: 0. → JsonReaderException: '3' is invalid after a value. Expected either ',', '}', or ']'. LineNumber: 4 | BytePositionInLine: 0.
+┣#N/A | Newtonsoft  | JsonReaderException: After parsing a value an unexpected character was encountered: 3. Path '[2]', line 5, position 0.
+┣#N/A | Face.Json   | ParseError: Expected ',' or ']', found '3' at `[2]`, input position 10 (line 5)
+
+┏━ 18b ━ bad key ━ '[1, 2, {6: false}]':
+┣#1   | Newtonsoft  | 167,715.346/s
+┣#N/A | Utf8Json    | JsonParsingException: expected:'String Begin Token', actual:'6', at offset:8
+┣#N/A | System.Text | JsonException: '6' is an invalid start of a property name. Expected a '"'. Path: $ | LineNumber: 0 | BytePositionInLine: 8. → JsonReaderException: '6' is an invalid start of a property name. Expected a '"'. LineNumber: 0 | BytePositionInLine: 8.
+┣#N/A | Face.Json   | ParseError: Expected '"', found '6' at `[2]{key 0}`, input position 8
+
+┏━ 14b ━ nulll ━ '{"wat": nulll}':
+┣#N/A | Utf8Json    | JsonParsingException: expected:',', actual:'l', at offset:12
+┣#N/A | System.Text | JsonException: 'l' is invalid after a value. Expected either ',', '}', or ']'. Path: $ | LineNumber: 0 | BytePositionInLine: 12. → JsonReaderException: 'l' is invalid after a value. Expected either ',', '}', or ']'. LineNumber: 0 | BytePositionInLine: 12.
+┣#N/A | Newtonsoft  | JsonReaderException: Error parsing null value. Path 'wat', line 1, position 12.
+┣#N/A | Face.Json   | ParseError: Expected value, found 'nulll' at `wat`, input position 8
+
+┏━ 20b ━ forgotten " ━ '{ "quality": fine" }':
+┣#N/A | Utf8Json    | JsonParsingException: expected:'false', actual:'false', at offset:13
+┣#N/A | System.Text | JsonException: 'fine" }' is an invalid JSON literal. Expected the literal 'false'. Path: $ | LineNumber: 0 | BytePositionInLine: 14. → JsonReaderException: 'fine" }' is an invalid JSON literal. Expected the literal 'false'. LineNumber: 0 | BytePositionInLine: 14.
+┣#N/A | Newtonsoft  | JsonReaderException: Error parsing boolean value. Path 'quality', line 1, position 14.
+┣#N/A | Face.Json   | ParseError: Expected value, found 'fine' at `quality`, input position 13
+
+┏━ 12b ━ nul ━ '{"wat": nul}':
+┣#N/A | Utf8Json    | JsonParsingException: expected:'null', actual:'null', at offset:8
+┣#N/A | System.Text | JsonException: 'nul}' is an invalid JSON literal. Expected the literal 'null'. Path: $ | LineNumber: 0 | BytePositionInLine: 11. → JsonReaderException: 'nul}' is an invalid JSON literal. Expected the literal 'null'. LineNumber: 0 | BytePositionInLine: 11.
+┣#N/A | Newtonsoft  | JsonReaderException: Error parsing null value. Path 'wat', line 1, position 11.
+┣#N/A | Face.Json   | ParseError: Expected value, found 'nul' at `wat`, input position 8
+
+┏━ 11b ━ garbage ━ '123 asd zxc':
+┣#1   | Utf8Json    | 736,143.544/s
+┣#N/A | System.Text | JsonException: 'a' is invalid after a single JSON value. Expected end of data. Path: $ | LineNumber: 0 | BytePositionInLine: 4. → JsonReaderException: 'a' is invalid after a single JSON value. Expected end of data. LineNumber: 0 | BytePositionInLine: 4.
+┣#N/A | Newtonsoft  | JsonReaderException: Additional text encountered after finished reading JSON content: a. Path '', line 1, position 4.
+┣#N/A | Face.Json   | ParseError: Unexpected 'asd' at input position 4
+
+┏━ 19b ━ silly number ━ '[56.38.3-+22e9e9.+]':
+┣#N/A | Utf8Json    | JsonParsingException: expected:',', actual:'.', at offset:6
+┣#N/A | System.Text | JsonException: '.' is an invalid end of a number. Expected 'E' or 'e'. Path: $ | LineNumber: 0 | BytePositionInLine: 6. → JsonReaderException: '.' is an invalid end of a number. Expected 'E' or 'e'. LineNumber: 0 | BytePositionInLine: 6.
+┣#N/A | Newtonsoft  | JsonReaderException: Input string '56.38.3-+22e9e9.+' is not a valid number. Path '[0]', line 1, position 18.
+┣#N/A | Face.Json   | ParseError: Failed to parse number at `[0]`, input position 1 → FormatException: Input string was not in a correct format.
+
+┏━ 9b ━ unclosed array ━ '[4,6,true':
+┣#1   | Newtonsoft  | 261,017.365/s
+┣#N/A | Utf8Json    | IndexOutOfRangeException: Index was outside the bounds of the array.
+┣#N/A | System.Text | JsonException: Expected depth to be zero at the end of the JSON payload. There is an open JSON object or array that should be closed. Path: $ | LineNumber: 0 | BytePositionInLine: 9. → JsonReaderException: Expected depth to be zero at the end of the JSON payload. There is an open JSON object or array that should be closed. LineNumber: 0 | BytePositionInLine: 9.
+┣#N/A | Face.Json   | ParseError: Past end of input at `[2]`
+
+┏━ 38b ━ duplicate key ━ '{"fruit": "banana", "fruit": "orange"}':
+┣#1   | Face.Json   | 542,597.927/s
+┣#2   | Newtonsoft  | 185,952.014/s
+┣#3   | System.Text | 130,633.400/s
+┣#N/A | Utf8Json    | ArgumentException: An item with the same key has already been added. Key: fruit
+
+┏━ 13b ━ \n in string ━ '"hello␊world"':
+┣#1   | Face.Json   | 834,564.549/s
+┣#2   | Utf8Json    | 734,424.987/s
+┣#3   | Newtonsoft  | 462,455.476/s
+┣#N/A | System.Text | JsonException: '0x0A' is invalid within a JSON string. The string should be correctly escaped. Path: $ | LineNumber: 0 | BytePositionInLine: 6. → JsonReaderException: '0x0A' is invalid within a JSON string. The string should be correctly escaped. LineNumber: 0 | BytePositionInLine: 6.
+
+┏━ 7b ━ stray char ━ '[123 b]':
+┣#N/A | Utf8Json    | JsonParsingException: expected:',', actual:'b', at offset:5
+┣#N/A | System.Text | JsonException: 'b' is invalid after a value. Expected either ',', '}', or ']'. Path: $ | LineNumber: 0 | BytePositionInLine: 5. → JsonReaderException: 'b' is invalid after a value. Expected either ',', '}', or ']'. LineNumber: 0 | BytePositionInLine: 5.
+┣#N/A | Newtonsoft  | JsonReaderException: After parsing a value an unexpected character was encountered: b. Path '[0]', line 1, position 5.
+┣#N/A | Face.Json   | ParseError: Expected ',' or ']', found 'b' at `[0]`, input position 5

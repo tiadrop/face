@@ -43,4 +43,4 @@ Rather than attempting to construct native objects from JSON data, `IJsonEncodab
 
 I believe JSON's dynamically-structured nature is a strength and have aimed to take advantage of it while providing type information and safety where appropriate. See [demo/JsonDemo.cs](demo/JsonDemo.cs) for examples of importing and exporting JSON using this system.
 
-According to rough but generally consistent [benchmark](jsonbenchmark.log) ([JsonTest.cs](demo/JsonTest.cs)), `JsValue.FromJson()`'s performance is comparable with that of Utf8Json and Text.Json's equivalents in most cases and outperforms both in some common cases.
+According to rough but generally consistent [benchmark](jsonbenchmark.log) ([JsonTest.cs](demo/JsonTest.cs)), `JsValue.FromJson()`'s performance is comparable with that of Utf8Json and Text.Json's equivalents in most cases and outperforms both in some common cases. I've tried to make [parse error messages](errortest.log) informative and concise.
