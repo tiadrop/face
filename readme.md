@@ -37,10 +37,12 @@ Included is a similar system written in JavaScript. It was written for private u
 
 ### JSON
 
-Face.Json provides an `IJsonEncodable` interface and an extension method `ToJson()` to produce JSON-formatted data from each of IJsonEncodable, string, int, double, bool, T[] and IDictionary<string, T> where T : IJsonEncodable or a listed primitive.
+Face.Json provides an `IJsonEncodable` interface and an extension method `ToJson()` to produce JSON-formatted data from each of IJsonEncodable, string, int, double, bool, T[] and IDictionary<string, T> where T is any such type.
 
-Rather than attempting to construct native objects from JSON data, `IJsonEncodable.ToJsValue()` and `JsValue.FromJson()` allow for manually-processed dynamic structure with runtime type-checking. Each produces a JsValue object with interfaces to read its internal value as any compatible type including `ReadOnlyDictionary<string, JsValue>` and `JsValue[]`. JS object properties can be read via `value[string]` and JS array entries can be read via `value[int]`. A JsValue reveals its type via `value.DataType`, just as one might use `typeof` in JSON's most natural habitat.
+Rather than attempting to construct native objects from JSON data, `IJsonEncodable.ToJsValue()` and `JsValue.FromJson()` allow for manually-processed dynamic structure with runtime type-checking. Each produces a JsValue object with interfaces to read its internal value as any compatible type including `ReadOnlyDictionary<string, JsValue>` and `JsValue[]`. JS object properties can be read via `value[string]` and JS array entries can be read via `value[int]`. A JsValue reveals its type via `value.Type`, just as one might use `typeof` and `Array.isArray()` in JSON's most natural habitat.
 
 I believe JSON's dynamically-structured nature is a strength and have aimed to take advantage of it while providing type information and safety where appropriate. See [demo/JsonDemo.cs](demo/JsonDemo.cs) for examples of importing and exporting JSON using this system.
+
+Casting between JsValue and compatible types is implicit.
 
 According to rough but generally consistent [benchmark](jsonbenchmark.log) ([JsonTest.cs](demo/JsonTest.cs)), `JsValue.FromJson()`'s performance is comparable with that of Utf8Json and Text.Json's equivalents in most cases and outperforms both in some common cases. I've tried to make [parse error messages](errortest.log) informative and concise.
