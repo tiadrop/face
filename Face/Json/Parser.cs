@@ -34,16 +34,16 @@ namespace Lantern.Face.Json {
         /// Reduces a chain of ParseErrors into a single ParseError, assembling the
         /// JSON path from the chain.
         /// </summary>
-        /// <param name="parser"></param>
+        /// <param name="input">The full input string</param>
         /// <returns></returns>
-        internal ParseError Consolidate(Parser parser) {
+        internal ParseError Consolidate(string input) {
             var location = new List<string>(2);
             // prepare json path from this and inner ParseErrors
             string path = fullJsonPath;
             if (path.Length > 0 && path[0] == '.') path = path.Substring(1);
             if (path != "") location.Add($"`{path}`");
             // prepare location suffix from this ParseError's position
-            if (JsonPosition > -1) location.Add(parser.describePosition(JsonPosition));
+            if (JsonPosition > -1) location.Add(describePosition(JsonPosition, input));
             // join up all the location info we have
             string suffix = location.Count > 0 ? $" at {string.Join(", ", location)}" : "";
             var baseParseError = this;
@@ -53,6 +53,21 @@ namespace Lantern.Face.Json {
             return new ParseError($"{baseParseError.Message}{suffix}", baseParseError.InnerException);
         }
         
+        /// <summary>
+        /// Returns a human-readable reference to an input position for use in error messages.
+        /// If input contains multiple lines the position's line number is included in the description.
+        /// </summary>
+        /// <param name="pos">A position in the JSON input</param>
+        /// <param name="input"></param>
+        /// <returns>E.g. "input position 61 (line 4)"</returns>
+        internal static string describePosition(int pos, string input) {
+            string s = $"input position {pos.ToString()}";
+            int lineCount = Parser.CrLfRegex.Matches(input.Substring(0, pos)).Count;
+            // needn't scan for a cr/lf if we've already found some
+            if (lineCount > 0 || Parser.CrLfRegex.IsMatch(input, pos)) s += $" (line {lineCount + 1})";
+            return s;
+        }
+       
     }
     
     internal class Parser {
@@ -66,6 +81,8 @@ namespace Lantern.Face.Json {
             length = json.Length;
             this.relaxed = relaxed;
         }
+        
+        internal static readonly Regex CrLfRegex = new Regex("\r\n|\r|\n");
 
         /// <summary>
         /// Produces a JsValue object from a JSON-formatted string
@@ -83,11 +100,9 @@ namespace Lantern.Face.Json {
                     throw new ParseError($"Unexpected '{parser.getSymbol()}'", parser.position);
                 return result;
             } catch (ParseError e) {
-                throw e.Consolidate(parser);
+                throw e.Consolidate(json);
             }
         }
-       
-        private static readonly Regex crLfRegex = new Regex("\r\n|\r|\n");
 
         /// <summary>
         /// Moves the read position to the next meaningful symbol.
@@ -118,7 +133,7 @@ namespace Lantern.Face.Json {
                 }
 
                 if (relaxed && position < length - 1 && c == '/' && input[position + 1] == '/') { // skip comment if relaxed
-                    var nextLine = crLfRegex.Match(input, position + 2);
+                    var nextLine = CrLfRegex.Match(input, position + 2);
                     if (nextLine.Success) {
                         position = nextLine.Index + nextLine.Length - 2;
                         continue;
@@ -138,20 +153,6 @@ namespace Lantern.Face.Json {
             var symbol = symbolRegex.Match(input, position).Value;
             if (symbol.Length > 16) symbol = symbol.Substring(0, 16) + "...";
             return symbol;
-        }
-
-        /// <summary>
-        /// Returns a human-readable reference to an input position for use in error messages.
-        /// If input contains multiple lines the position's line number is included in the description.
-        /// </summary>
-        /// <param name="pos">A position in the JSON input</param>
-        /// <returns>E.g. "input position 61 (line 4)"</returns>
-        internal string describePosition(int pos) {
-            string s = $"input position {pos.ToString()}";
-            int lineCount = crLfRegex.Matches(input.Substring(0, pos)).Count;
-            // needn't scan for a cr/lf if we've already found some
-            if (lineCount > 0 || crLfRegex.IsMatch(input, pos)) s += $" (line {lineCount + 1})";
-            return s;
         }
 
         /// <summary>

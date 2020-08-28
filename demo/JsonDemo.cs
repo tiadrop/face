@@ -33,6 +33,8 @@ public static class JsonDemo {
 		User[] users = jsobj["hello"][6]["users"].ArrayValue
 			.Select(User.FromJsValue).ToArray();
 
+		Console.WriteLine($"[json demo] From path: {jsobj.FromPath("hello[6]{users}[0].namex")}");
+
 		Console.WriteLine($"[json demo] {users[1].Name} verified: {users[1].Verified}");
 
 		Console.WriteLine(
@@ -44,6 +46,7 @@ public static class JsonDemo {
 			["unread_notice_ids"] = new []{ 52, 111 },
 		};
 		Console.WriteLine("[json demo] dictionary<string,jsvalue>.ToJson(true): " + dictionary.ToJson(true));
+	
 
 		/*
 			[json demo] First key of object.hello[6]: animal

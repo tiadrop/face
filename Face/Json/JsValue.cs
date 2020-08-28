@@ -4,6 +4,8 @@ using System.Collections;
 using System.Linq;
 using System.Collections.Generic;
 using System.Globalization;
+using System.Runtime.Serialization;
+using System.Text.RegularExpressions;
 
 namespace Lantern.Face.Json {
 
@@ -259,7 +261,15 @@ namespace Lantern.Face.Json {
 		public override string ToString() => StringValue;
 
 		// indexers
-		public JsValue this[string property] => ObjectValue[property];
+		public JsValue this[string property] {
+			get {
+				try {
+					return ObjectValue[property];
+				} catch (KeyNotFoundException e) {
+					throw new KeyNotFoundException($"Property '{property}' does not exist in the Object JsValue", e);
+				}
+			}
+		}
 		public JsValue this[int index] => ArrayValue[index];
 
 		public ReadOnlyDictionary<string, JsValue>.KeyCollection Keys => ObjectValue.Keys;
@@ -347,6 +357,55 @@ namespace Lantern.Face.Json {
 				DataType.Null => 0,
 				_ => 0
 			};
+		}
+
+		/// <summary>
+		/// Reads a JsValue from an object path
+		/// e.g. accounts[5].orders[4]{non-alphanum key}
+		/// </summary>
+		/// <param name="path"></param>
+		/// <returns></returns>
+		public JsValue FromPath(string path) {
+			int position = 0;
+			JsValue subvalue = this;
+			Regex words = new Regex(@"\G\w+");
+			Regex indexString = new Regex(@"\G\[(\d+)\]");
+			Regex propertyString = new Regex(@"\G\{(.*?)\}");
+			try {
+				while (position < path.Length) {
+					if (path[position] == '.') position++;
+					var wordMatch = words.Match(path, position);
+					if (wordMatch.Success) { 
+						subvalue = subvalue[wordMatch.Value];
+						position += wordMatch.Length;
+						continue;
+					}
+
+					var stringMatch = propertyString.Match(path, position);
+					if (stringMatch.Success) { 
+						var prop = stringMatch.Groups[1].Value;
+						subvalue = subvalue[prop];
+						position += stringMatch.Length;
+						continue;
+					}
+
+					var numberMatch = indexString.Match(path, position);
+					if (numberMatch.Success) {
+						var idx = numberMatch.Groups[1].Value;
+						subvalue = subvalue[int.Parse(idx)];
+						position += numberMatch.Length;
+						continue;
+					}
+
+					throw new ParseError($"Expected path component, '[' or '{{'; found '{path[position]}", position);
+				}
+			} catch (IndexOutOfRangeException e) {
+				throw new ParseError("Past end of path", e);
+			} catch (ParseError e) {
+				throw e.Consolidate(path);
+			}
+
+			return subvalue;
 		}
 	}
 	
