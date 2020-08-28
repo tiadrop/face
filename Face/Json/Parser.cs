@@ -15,7 +15,6 @@ namespace Lantern.Face.Json {
             JsonPosition = position;
         }
 
-        //public ParseError(string reason, Exception inner) : base(reason, inner) { }
         private readonly string jsonPathComponent = "";
         
         public ParseError(Exception innerException, string jsonPathComponent) : base($"Error parsing `{getJsonPath(innerException, jsonPathComponent).TrimStart('.')}`", innerException) {
@@ -25,10 +24,10 @@ namespace Lantern.Face.Json {
 
         private static string getJsonPath(Exception innerException, string path) {
             if (!(innerException is ParseError inner)) return path; 
-            return path + inner.fullJsonPath;
+            return path + inner.FullJsonPath;
         }
 
-        private string fullJsonPath => getJsonPath(InnerException, jsonPathComponent);
+        private string FullJsonPath => getJsonPath(InnerException, jsonPathComponent);
 
         /// <summary>
         /// Reduces a chain of ParseErrors into a single ParseError, assembling the
@@ -39,7 +38,7 @@ namespace Lantern.Face.Json {
         internal ParseError Consolidate(string input) {
             var location = new List<string>(2);
             // prepare json path from this and inner ParseErrors
-            string path = fullJsonPath;
+            string path = FullJsonPath;
             if (path.Length > 0 && path[0] == '.') path = path.Substring(1);
             if (path != "") location.Add($"`{path}`");
             // prepare location suffix from this ParseError's position
@@ -60,7 +59,7 @@ namespace Lantern.Face.Json {
         /// <param name="pos">A position in the JSON input</param>
         /// <param name="input"></param>
         /// <returns>E.g. "input position 61 (line 4)"</returns>
-        internal static string describePosition(int pos, string input) {
+        private static string describePosition(int pos, string input) {
             string s = $"input position {pos.ToString()}";
             int lineCount = Parser.CrLfRegex.Matches(input.Substring(0, pos)).Count;
             // needn't scan for a cr/lf if we've already found some
@@ -70,11 +69,14 @@ namespace Lantern.Face.Json {
        
     }
     
+    
     internal class Parser {
         private readonly bool relaxed;
         private readonly string input;
         private int position = -1;
         private readonly int length;
+
+        private const int defaultMaxDepth = 32;
 
         private Parser(string json, bool relaxed = false) {
             input = json;
@@ -89,12 +91,13 @@ namespace Lantern.Face.Json {
         /// </summary>
         /// <param name="json">JSON-formatted string</param>
         /// <param name="relaxed">True to allow // comments and unquoted property names</param>
+        /// <param name="maxDepth"></param>
         /// <returns>Object representing the structure defined in JSON</returns>
-        internal static JsValue Parse(string json, bool relaxed = false){
+        internal static JsValue Parse(string json, bool relaxed = false, int maxDepth = defaultMaxDepth){
             var parser = new Parser(json, relaxed);
             try {
                 parser.NextToken(); // bring us to #0 + any whitespace
-                var result = parser.readValue();
+                var result = parser.readValue(maxDepth);
                 parser.NextToken(true); // bring us hopefully to end of input
                 if (parser.position < parser.length)
                     throw new ParseError($"Unexpected '{parser.getSymbol()}'", parser.position);
@@ -160,12 +163,13 @@ namespace Lantern.Face.Json {
         /// </summary>
         /// <returns>The value read from input</returns>
         /// <exception cref="ParseError"></exception>
-        private JsValue readValue() {
+        private JsValue readValue(int maxDepth = defaultMaxDepth) {
+            if(maxDepth < 0) throw new ParseError("Maximum object depth exceeded", position);
             char c = input[position];
             switch (c) {
                 case '"': return readString();
-                case '[': return readArray();
-                case '{': return readObject();
+                case '[': return readArray(maxDepth - 1);
+                case '{': return readObject(maxDepth - 1);
             }
 
             if (isNumeric(c)) return readNumber();
@@ -224,8 +228,8 @@ namespace Lantern.Face.Json {
         private string readEscapedCodepointChar() {
             int codepoint = readEscapedCodepoint();
             if (codepoint >= highSurrogateStart && codepoint <= 57343) {
-                if (position < length - 3) {
-                    throw new ParseError("Expected low surrogate \\u sequence, past end of input", position);
+                if (position > length - 3) {
+                    throw new ParseError("Expected low surrogate \\u sequence, past end of input");
                 }
                 if (input[position + 1] != '\\' || input[position + 2] != 'u') {
                     throw new ParseError($"Expected low surrogate, found '{getSymbol()}'", position);
@@ -286,16 +290,17 @@ namespace Lantern.Face.Json {
         private JsValue readString() {
             var startPosition = position;
             position++; // skip first "
-            if(position == length) throw new ParseError("Unclosed string", startPosition);
+            //if(position == length) throw new ParseError("Unclosed string", startPosition);
 
+            
             var sb = new StringBuilder();
             bool escaping = false;
             int literalLength = 0;
-            var c = input[position];
-            while(escaping || c != '"'){
-                if(escaping){
-                    escaping = false;
-                    try {
+            try {
+                var c = input[position];
+                while (escaping || c != '"') {
+                    if (escaping) {
+                        escaping = false;
                         sb.Append(c switch {
                             'n' => '\n',
                             'r' => '\r',
@@ -308,24 +313,22 @@ namespace Lantern.Face.Json {
                             'f' => '\x0c',
                             _ => throw new ParseError($"Unknown escape character '{c}'", position)
                         });
-                    } catch (ParseError) {
-                        throw;
-                    } catch (Exception e) {
-                        // may be able to remove this catch (therefore the try) without effect;
-                        // update:  removing the try slows this method down a lot
-                        throw new ParseError("Failed to parse string", e, startPosition);
-                    }
-                } else if(c == '\\'){
-                    escaping = true;
-                    if (literalLength > 0) {
-                        sb.Append(input, position - literalLength, literalLength);
-                        literalLength = 0;
-                    }
-                } else literalLength++;
-                position++;
-                
-                if(position == length) throw new ParseError("Unclosed string", startPosition);
-                c = input[position];
+                    
+                    } else if (c == '\\') {
+                        escaping = true;
+                        if (literalLength > 0) {
+                            sb.Append(input, position - literalLength, literalLength);
+                            literalLength = 0;
+                        }
+                    } else literalLength++;
+
+                    position++;
+
+                    //if (position == length) throw new ParseError("Unclosed string", startPosition);
+                    c = input[position];
+                }
+            } catch (IndexOutOfRangeException) {
+                throw new ParseError("Unclosed string", startPosition);
             }
 
             if(literalLength > 0) sb.Append(input, position - literalLength, literalLength);
@@ -337,7 +340,7 @@ namespace Lantern.Face.Json {
         /// </summary>
         /// <returns></returns>
         /// <exception cref="ParseError"></exception>
-        private JsValue readArray(){
+        private JsValue readArray(int maxDepth){
             var found = new List<JsValue>();
             
             try {
@@ -346,7 +349,7 @@ namespace Lantern.Face.Json {
                     NextToken(); // move to ] or value 
                     if (input[position] == ']') return found.ToArray();
 
-                    var value = readValue();
+                    var value = readValue(maxDepth);
                     NextToken(); 
                     
                     switch (input[position]) {
@@ -376,7 +379,7 @@ namespace Lantern.Face.Json {
         /// </summary>
         /// <returns>A JsValue object with a DataType of Object</returns>
         /// <exception cref="ParseError"></exception>
-        private Dictionary<string, JsValue> readObject() {
+        private Dictionary<string, JsValue> readObject(int maxDepth) {
             var result = new Dictionary<string, JsValue>();
 
             while (true) {
@@ -408,7 +411,7 @@ namespace Lantern.Face.Json {
 
                     NextToken(); // move to value
 
-                    var value = readValue();
+                    var value = readValue(maxDepth);
                     result[keyValue] = value;
 
                     NextToken(); // move to , or }
