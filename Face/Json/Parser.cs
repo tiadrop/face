@@ -429,6 +429,7 @@ namespace Lantern.Face.Json {
         private static readonly Regex nonWord = new Regex("\\W");
 
         private static string FormatObjectPathComponent(string s) {
+            if (s == "") return "{\"\"}";
             s = shortenKey(s);
             return nonWord.IsMatch(s) ? $"{{{shortenKey(s).ToJson()}}}" : $".{s}";
         }
