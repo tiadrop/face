@@ -6,7 +6,7 @@ Face is a language learning project and probably shouldn't be used in the real w
 
 A Page's Body is an object of Classes, Attributes and a collection of Parts.
 
-Parts can be Elements. Element Parts expose methods and properties that pertain to HTML elements, with interfaces to manipulate a class list, attributes, `data-` attributes and `List<T> where T: Part` content. A Page's header section is generated on render and manipulated via members such as `Title`. A Page's Body is actually an Element.
+Parts can be Elements. Element Parts expose methods and properties that pertain to HTML elements, with interfaces to manipulate a class list, attributes, `data-` attributes and `List<T> where T: Part` content. A Page's header section is generated on render and manipulated via members such as `Title`. A Page's Body is of course an Element.
 
 Parts can be components; essentially factories for producing Element structures depending on their own applicable properties. See [Face/Parts/*](Face/Parts/) for examples of components. See [Face/parts/TimeAgo.cs](Face/Parts/TimeAgo.cs) in particular for an example of client-side JavaScript involvement in components.
 
@@ -43,6 +43,6 @@ Rather than attempting to construct native objects from JSON data, `IJsonEncodab
 
 I believe JSON's dynamically-structured nature is a strength and have aimed to take advantage of it while providing type information and safety where appropriate. See [demo/JsonDemo.cs](demo/JsonDemo.cs) for examples of importing and exporting JSON using this system.
 
-Casting between JsValue and compatible types is implicit.
+Casting between JsValue and compatible types is implicit, though an implicit cast from JsValue will throw an exception if the internal type does not match the target type. Explicit casting (`jsv.StringValue`, `jsv.BooleanValue` etc) does not bear this restriction.
 
 According to rough but generally consistent [benchmark](jsonbenchmark.log) ([JsonTest.cs](demo/JsonTest.cs)), `JsValue.FromJson()`'s performance is comparable with that of Utf8Json and Text.Json's equivalents in most cases and outperforms both in some common cases. I've tried to make [parse error messages](errortest.log) informative and concise.
