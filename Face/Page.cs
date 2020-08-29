@@ -99,7 +99,7 @@ namespace Lantern.Face {
 			// todo: combine requires with jsUrls; hard insert <script .Face.js> if requires.length > 0
 			if(clientRequires.Length > 0){
 				headSection.Append(new OtherElement("script") {
-					Content = new RawHtml($"face.require({String.Join(",", clientRequires.Select(s => s.ToJson()))});setTimeout(face.apply,1)")
+					Content = new RawHtml($"face.require({String.Join(",", clientRequires.Select(src => src.ToJson()))});setTimeout(face.apply,1)")
 				});
 			}
 

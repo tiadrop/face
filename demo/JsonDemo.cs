@@ -33,8 +33,6 @@ public static class JsonDemo {
 		User[] users = jsobj["hello"][6]["users"].ArrayValue
 			.Select(User.FromJsValue).ToArray();
 
-		Console.WriteLine($"[json demo] From path: {jsobj.FromPath("hello[6]{users}[0].namex")}");
-
 		Console.WriteLine($"[json demo] {users[1].Name} verified: {users[1].Verified}");
 
 		Console.WriteLine(
@@ -42,11 +40,18 @@ public static class JsonDemo {
 
 		Dictionary<string, JsValue> dictionary = new Dictionary<string, JsValue> {
 			["store_id"] = "C555",
-			["pending_user_accounts"] = new [] { new User("Jedward"), new User("Hoagie"), },
+			["pending_user_accounts"] = new [] {
+				new User("Jedward"),
+				new User("Hoagie"),
+			},
 			["unread_notice_ids"] = new []{ 52, 111 },
 		};
-		Console.WriteLine("[json demo] dictionary<string,jsvalue>.ToJson(true): " + dictionary.ToJson(true));
+		Console.WriteLine("[json demo] dictionary<string,JsValue>.ToJson(formatted: true): " + dictionary.ToJson(true));
 	
+		const string paf = "pending_user_accounts[1].name";
+		Console.WriteLine($"[json demo] Path: {paf.ToJson()}");
+		Console.WriteLine($"[json demo] Result: {((JsValue)dictionary).FromPath(paf)}");
+
 
 		/*
 			[json demo] First key of object.hello[6]: animal

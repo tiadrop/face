@@ -4,7 +4,6 @@ using System.Collections;
 using System.Linq;
 using System.Collections.Generic;
 using System.Globalization;
-using System.Runtime.Serialization;
 using System.Text.RegularExpressions;
 
 namespace Lantern.Face.Json {
@@ -23,11 +22,6 @@ namespace Lantern.Face.Json {
 		}
 		public const int DefaultMaxDepth = 32;
 		public readonly DataType Type;
-		//private readonly bool _booleanValue;
-		//private readonly double _numberValue;
-		//private readonly string _stringValue;
-		//private readonly ReadOnlyDictionary<string, JsValue> _objectValue;
-		//private readonly JsValue[] _arrayValue;
 
 		private readonly object _value;
 
@@ -70,7 +64,7 @@ namespace Lantern.Face.Json {
 			_value = array;
 		}
 
-		private JsValue(JsNull nul) {
+		private JsValue() {
 			Type = DataType.Null;
 		}
 
@@ -180,8 +174,7 @@ namespace Lantern.Face.Json {
 		/// <returns>this, if its value equates to true, otherwise the value returned by altFn</returns>
 		public JsValue Or(Func<JsValue> altFn) => BooleanValue ? this : altFn();
 
-		private class JsNull { }
-		public static readonly JsValue Null = new JsValue(new JsNull());
+		public static readonly JsValue Null = new JsValue();
 
 		public bool IsNumber => Type == DataType.Number;
 		public bool IsString => Type == DataType.String;
@@ -266,7 +259,7 @@ namespace Lantern.Face.Json {
 				try {
 					return ObjectValue[property];
 				} catch (KeyNotFoundException e) {
-					throw new KeyNotFoundException($"Property '{property}' does not exist in the Object JsValue", e);
+					throw new KeyNotFoundException($"Property '{property}' does not exist on this Object-typed JsValue", e);
 				}
 			}
 		}
@@ -366,9 +359,10 @@ namespace Lantern.Face.Json {
 		/// <param name="path"></param>
 		/// <returns></returns>
 		public JsValue FromPath(string path) {
+			// not entirely happy with this approach; should prepend '.' if path[0] alphanumeric and read \.\w+ as a step
 			int position = 0;
 			JsValue subvalue = this;
-			Regex words = new Regex(@"\G\w+");
+			Regex words = new Regex(@"\G[_\w]+");
 			Regex indexString = new Regex(@"\G\[(\d+)\]");
 			Regex propertyString = new Regex(@"\G\{(.*?)\}");
 			try {
@@ -376,7 +370,11 @@ namespace Lantern.Face.Json {
 					if (path[position] == '.') position++;
 					var wordMatch = words.Match(path, position);
 					if (wordMatch.Success) { 
-						subvalue = subvalue[wordMatch.Value];
+						try {
+							subvalue = subvalue[wordMatch.Value];
+						} catch (Exception e) {
+							throw new IndexOutOfRangeException($"Could not follow property {wordMatch.Value.ToJson()} from {path.Substring(0, position)}", e);
+						}
 						position += wordMatch.Length;
 						continue;
 					}
@@ -384,7 +382,12 @@ namespace Lantern.Face.Json {
 					var stringMatch = propertyString.Match(path, position);
 					if (stringMatch.Success) { 
 						var prop = stringMatch.Groups[1].Value;
-						subvalue = subvalue[prop];
+						try {
+							subvalue = subvalue[prop];
+						} catch (Exception e) {
+							throw new IndexOutOfRangeException($"Could not follow property {prop.ToJson()} from `{path.Substring(0, position)}`", e);
+						}
+
 						position += stringMatch.Length;
 						continue;
 					}
@@ -392,15 +395,33 @@ namespace Lantern.Face.Json {
 					var numberMatch = indexString.Match(path, position);
 					if (numberMatch.Success) {
 						var idx = numberMatch.Groups[1].Value;
-						subvalue = subvalue[int.Parse(idx)];
+						try {
+							subvalue = subvalue[int.Parse(idx)];
+						} catch (Exception e) {
+							throw new IndexOutOfRangeException($"Could not follow index {idx} from `{path.Substring(0, position)}`", e);
+						}
+
 						position += numberMatch.Length;
 						continue;
 					}
 
-					throw new ParseError($"Expected path component, '[' or '{{'; found '{path[position]}", position);
+					var errorPath = path.Substring(0, position);
+					// parse error; determine the nature
+					if (path[position] == '[') {
+						if(position == path.Length - 1) throw new ParseError($"Expected array index, end of input after '{errorPath}'");
+						var foundNumRegex = new Regex(@"\G\d+.|\G.");
+						throw new ParseError($"Expected array index; found '{foundNumRegex.Match(path, position + 1)}' after '{errorPath}'");
+					}
+					if (path[position] == '{') {
+						throw new ParseError($"Unclosed '{{' after '{errorPath}'");
+					}
+					if (path[position] == '.') {
+						throw new ParseError($"Expected path component; found '.' after '{errorPath}'");
+					}
+
+					var foundRegex = new Regex(@"\G\w+.|\G.");
+					throw new ParseError($"Expected '.', '[index]' or '{{property}}'; found '{foundRegex.Match(path, position + 1)}' after '{errorPath}'");
 				}
-			} catch (IndexOutOfRangeException e) {
-				throw new ParseError("Past end of path", e);
 			} catch (ParseError e) {
 				throw e.Consolidate(path);
 			}
