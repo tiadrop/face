@@ -58,7 +58,7 @@ namespace face.demo {
         public delegate void WriteAction(string s, ConsoleColor colour = ConsoleColor.Gray);
 
         public void Run(WriteAction write = null) {
-            if (write == null) write = (s, colour) => Console.WriteLine(s, colour);
+            if (write == null) write = (s, colour) => Console.Write(s, colour);
 
             Action<(ConsoleColor, string)[]> writeColour = pairs => {
                 foreach (var (colour, s) in pairs) {
