@@ -76,7 +76,7 @@ namespace Lantern.Face.Json {
         private int position = -1;
         private readonly int length;
 
-        private const int defaultMaxDepth = 32;
+        private const int defaultMaxDepth = 128;
 
         private Parser(string json, bool relaxed = false) {
             input = json;
