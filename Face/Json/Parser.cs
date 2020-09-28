@@ -149,7 +149,7 @@ namespace Lantern.Face.Json {
             }
         }
 
-        static readonly Regex symbolRegex = new Regex("\\G\\w{1,16}"); 
+        static readonly Regex symbolRegex = new Regex("\\G\\w{1,17}"); 
         private string getSymbol() {
             var match = symbolRegex.Match(input, position);
             if (!match.Success) return input[position].ToString();
