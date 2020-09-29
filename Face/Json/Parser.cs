@@ -174,18 +174,18 @@ namespace Lantern.Face.Json {
 
             if (isNumeric(c)) return readNumber();
 
-            string nextThree = input[(position + 1) .. (Math.Min(position + 4, length))];
-            switch (nextThree) {
-                case "ull" when c == 'n':
+            string fourChars = c + input[(position + 1) .. (Math.Min(position + 4, length))];
+            switch (fourChars) {
+                case "null":
                     if (length > position + 4 && char.IsLetterOrDigit(input[position + 4])) break;
                     position += 3;
                     return JsValue.Null;
-                case "rue" when c == 't':
+                case "true":
                     if (length > position + 4 && char.IsLetterOrDigit(input[position + 4])) break;
                     position += 3;
                     return true;
-                case "als" when c == 'f' && position < length - 4 && input[position + 4] == 'e':
-                    if (length > position + 5 && char.IsLetterOrDigit(input[position + 5])) break;
+                case "fals":
+                    if (position > length - 5 || input[position + 4] != 'e' || (length > position + 5 && char.IsLetterOrDigit(input[position + 5]))) break;
                     position += 4;
                     return false;
             }
