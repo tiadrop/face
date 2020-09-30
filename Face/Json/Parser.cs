@@ -210,7 +210,7 @@ namespace Lantern.Face.Json {
         /// Ascertains whether a character is numeric. '.', 'e', '+' and '-' are considered numeric.
         /// </summary>
         /// <param name="ch"></param>
-        /// <returns>True if the symbol at current position is numeric</returns>
+        /// <returns>True if the character is numeric</returns>
         private static bool isNumeric(char ch) =>
             ch switch {
                 '0' => true, '1' => true, '2' => true, '3' => true, '4' => true,
@@ -368,7 +368,7 @@ namespace Lantern.Face.Json {
         }
         
         /// <summary>
-        /// Shortens a string to a maximum length for inclusion in exception messag`es.
+        /// Shortens a string to a maximum length for inclusion in exception messages.
         /// </summary>
         /// <param name="k"></param>
         /// <returns>Shortened key</returns>
