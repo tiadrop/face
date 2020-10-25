@@ -21,7 +21,7 @@ namespace Lantern.Face.Parts {
 		}
 
 		// delegates are passed the http context that notified us of the button click
-		public delegate Task Delegate(HttpContext context, ReadOnlyDictionary<string, JsValue> formData);
+		public delegate Task Delegate(HttpContext context, Dictionary<string, JsValue> formData);
 		// todo: wrap HttpContext to allow use with other HTTP suites
 
 		internal class CacheEntry {
@@ -75,7 +75,7 @@ namespace Lantern.Face.Parts {
 			set {
 				string id = CreateID();
 				ulong time = GetCurrentTimestamp();
-				if (cache.Count > AutoCleanupMinimumCacheSize && time > lastCacheClearTime + AutoCleanupSecondsBetween) RemoveExpired();
+				if (cache.Count > autoCleanupMinimumCacheSize && time > lastCacheClearTime + autoCleanupSecondsBetween) RemoveExpired();
 				if(value == _delegate) return;
 				if (_delegate != null) {
 					// a delegate was already assigned and should now be inaccessible; remove it from the cache
@@ -103,14 +103,14 @@ namespace Lantern.Face.Parts {
 		}
 
 		// This lets smaller services run cleanup far less frequently at the expense of a little RAM
-		private const int AutoCleanupMinimumCacheSize = 512;
+		private const int autoCleanupMinimumCacheSize = 512;
 
 		// DDoS prevention; even non-modifying cleanup is potentially expensive so restrict public triggering
-		private const long AutoCleanupSecondsBetween = 20;
+		private const long autoCleanupSecondsBetween = 20;
 		private static ulong lastCacheClearTime = 0;
 
 		// Time in seconds to remove untouched cache entries
-		private const int PingTimeout = 300;
+		private const int pingTimeout = 300;
 
 		
 		public static void RemoveExpired(){
@@ -119,7 +119,7 @@ namespace Lantern.Face.Parts {
 			var numBefore = cache.Count();
 			foreach(var k in cache.Keys){
 				var entry = cache[k];
-				if(entry.Expired || time > entry.TouchedTime + PingTimeout) cache.Remove(k);
+				if(entry.Expired || time > entry.TouchedTime + pingTimeout) cache.Remove(k);
 			}
 			var numAfter = cache.Count();
 			Console.WriteLine("Cache purge: " + (numBefore - numAfter).ToString() + " removed");
@@ -128,7 +128,7 @@ namespace Lantern.Face.Parts {
 		// Locates and calls the identified delegate against the given HTTP context
 		public static async Task Fire(string guid, HttpContext context){
 			ulong time = GetCurrentTimestamp();
-			if (cache.Count > AutoCleanupMinimumCacheSize && time > lastCacheClearTime + AutoCleanupSecondsBetween) RemoveExpired();
+			if (cache.Count > autoCleanupMinimumCacheSize && time > lastCacheClearTime + autoCleanupSecondsBetween) RemoveExpired();
 
 			if(!cache.Keys.Contains(guid)){
 				context.Response.ContentType = "text/plain";
@@ -149,9 +149,9 @@ namespace Lantern.Face.Parts {
 			if(d.Button.Once) cache.Remove(guid);
 			string body = await new StreamReader(context.Request.Body).ReadToEndAsync();
 			try {
-				ReadOnlyDictionary<string, JsValue> formData = body.Length == 0
-					? new ReadOnlyDictionary<string, JsValue>(new Dictionary<string, JsValue>())
-					: JsValue.FromJson(body);
+				Dictionary<string, JsValue> formData = body.Length == 0
+					? new Dictionary<string, JsValue>()
+					: JsValue.FromJson(body).ObjectValue;
 				await entry.Button._delegate(context, formData);
 			} catch (ParseError) { } // ignore malformed body
 		}

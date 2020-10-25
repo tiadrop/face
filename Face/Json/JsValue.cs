@@ -1,4 +1,3 @@
-using System.Collections.ObjectModel;
 using System;
 using System.Collections;
 using System.Linq;
@@ -70,23 +69,19 @@ namespace Lantern.Face.Json {
 
 		public JsValue(IDictionary<string, JsValue> properties) {
 			Type = DataType.Object;
-			if (properties is ReadOnlyDictionary<string, JsValue> asReadOnly) {
-				_value = asReadOnly;
-			} else {
-				_value = new ReadOnlyDictionary<string, JsValue>(properties);
-			}
+			_value = new Dictionary<string, JsValue>(properties);
 		}
 
 		public JsValue(IEnumerable<(string, JsValue)> keyValuePairs) {
 			Type = DataType.Object;
 			var kvpArray = keyValuePairs.Select(pair => new KeyValuePair<string, JsValue>(pair.Item1, pair.Item2));
 			var dict = new Dictionary<string, JsValue>(kvpArray);
-			_value = new ReadOnlyDictionary<string, JsValue>(dict);
+			_value = new Dictionary<string, JsValue>(dict);
 		}
 
 		public JsValue(IEnumerable<KeyValuePair<string, JsValue>> source) {
 			Type = DataType.Object;
-			_value = new ReadOnlyDictionary<string, JsValue>(new Dictionary<string, JsValue>(source));
+			_value = new Dictionary<string, JsValue>(new Dictionary<string, JsValue>(source));
 		}
 
 		/// <summary>
@@ -136,8 +131,8 @@ namespace Lantern.Face.Json {
 		/// <summary>
 		/// Returns a wrapped Object-typed value
 		/// </summary>
-		public ReadOnlyDictionary<string, JsValue> ObjectValue => Type switch {
-			DataType.Object => (ReadOnlyDictionary<string, JsValue>)_value,
+		public Dictionary<string, JsValue> ObjectValue => Type switch {
+			DataType.Object => (Dictionary<string, JsValue>)_value,
 			DataType.Null => null,
 			_ => throw new InvalidCastException($"Can't read JS {Type} as object")
 		};
@@ -230,26 +225,26 @@ namespace Lantern.Face.Json {
 		public static implicit operator double[](JsValue j) => j.ArrayValue.Select(m => (double)m).ToArray();
 
 		// JS object > native typed Dictionary
-		public static implicit operator ReadOnlyDictionary<string, string>(JsValue j)
-			=> new ReadOnlyDictionary<string, string>(new Dictionary<string, string>(j.ObjectValue.Select(kv =>
+		public static implicit operator Dictionary<string, string>(JsValue j)
+			=> new Dictionary<string, string>(j.ObjectValue.Select(kv =>
 				new KeyValuePair<string, string>(kv.Key, kv.Value)
-			)));
-		public static implicit operator ReadOnlyDictionary<string, bool>(JsValue j)
-			=> new ReadOnlyDictionary<string, bool>(new Dictionary<string, bool>(j.ObjectValue.Select(kv =>
+			));
+		public static implicit operator Dictionary<string, bool>(JsValue j)
+			=> new Dictionary<string, bool>(j.ObjectValue.Select(kv =>
 				new KeyValuePair<string, bool>(kv.Key, kv.Value)
-			)));
-		public static implicit operator ReadOnlyDictionary<string, int>(JsValue j)
-			=> new ReadOnlyDictionary<string, int>(new Dictionary<string, int>(j.ObjectValue.Select(kv =>
+			));
+		public static implicit operator Dictionary<string, int>(JsValue j)
+			=> new Dictionary<string, int>(j.ObjectValue.Select(kv =>
 				new KeyValuePair<string, int>(kv.Key, kv.Value)
-			)));
-		public static implicit operator ReadOnlyDictionary<string, double>(JsValue j)
-			=> new ReadOnlyDictionary<string, double>(new Dictionary<string, double>(j.ObjectValue.Select(kv =>
+			));
+		public static implicit operator Dictionary<string, double>(JsValue j)
+			=> new Dictionary<string, double>(j.ObjectValue.Select(kv =>
 				new KeyValuePair<string, double>(kv.Key, kv.Value)
-			)));
+			));
 
 
 		public static implicit operator JsValue[](JsValue j) => j.ArrayValue;
-		public static implicit operator ReadOnlyDictionary<string, JsValue>(JsValue j) => j.ObjectValue;
+		public static implicit operator Dictionary<string, JsValue>(JsValue j) => j.ObjectValue;
 
 		public override string ToString() => StringValue;
 
@@ -265,7 +260,7 @@ namespace Lantern.Face.Json {
 		}
 		public JsValue this[int index] => ArrayValue[index];
 
-		public ReadOnlyDictionary<string, JsValue>.KeyCollection Keys => ObjectValue.Keys;
+		public Dictionary<string, JsValue>.KeyCollection Keys => ObjectValue.Keys;
 		public bool ContainsKey(string key) => ObjectValue.ContainsKey(key);
 		public bool Contains(JsValue value) => ArrayValue.Contains(value);
 		public int Count => ArrayValue.Length;
@@ -346,7 +341,7 @@ namespace Lantern.Face.Json {
 				DataType.Number => ((double)_value).GetHashCode(),
 				DataType.Boolean => ((bool)_value).GetHashCode(),
 				DataType.Array => ((JsValue[])_value).GetHashCode(),
-				DataType.Object => ((ReadOnlyDictionary<string, JsValue>)_value).GetHashCode(),
+				DataType.Object => ((Dictionary<string, JsValue>)_value).GetHashCode(),
 				DataType.Null => 0,
 				_ => 0
 			};
