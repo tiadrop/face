@@ -2,8 +2,8 @@
 
 Examples:
 
-const jel = require("jel");
-const $ = J.dom;
+const Jel = require("jel");
+const $ = Jel.dom;
 
 // wrap an existing element
 const body = $(document.body);
@@ -470,9 +470,8 @@ const createParser = (entityTypes = {}) => {
 	};
 };
 
-module.exports = {
-	createParser,
-	wrapHtmlElement: wrapHtmlNode,
-	Jel,
-	dom: createParser().dom
-};
+Jel.createParser = createParser;
+Jel.wrapHtmlElement = wrapHtmlNode;
+Jel.dom = createParser().dom;
+
+module.exports = Jel;
